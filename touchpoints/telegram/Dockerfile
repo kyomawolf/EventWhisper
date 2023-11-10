@@ -1,22 +1,21 @@
-# Dockerfile for a Node.js app
 
-# Use an official Node.js runtime as a parent image
-FROM node:14-alpine
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim-buster
 
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Install dependencies
-RUN npm install
+# Install any needed packages specified in requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
-# Copy the rest of the application code to the working directory
-COPY . .
+# Make port 8080 available to the world outside this container
+EXPOSE 8080
 
-# Expose port 3000 for the app to listen on
-EXPOSE 3000
+# Define environment variable
+ENV NAME World
 
-# Start the app
-CMD ["npm", "start"]
+# Run app.py when the container launches
+CMD ["python", "app.py"]
