@@ -36,10 +36,10 @@ func getenvInt(key string, defaultValue int) int {
 
 func LoadConfig() (*Config, error) {
 	return &Config{
-		Port:         8080,
-		LogLevel:     "debug",
-		BasePath:     "/api/v1",
-		DBConnection: "mongodb://root:example@localhost:27017",
-		DatabaseName: "stopmotion",
+		Port:         getenvInt("PORT", 8080),
+		LogLevel:     getenvStr("LOG_LEVEL", "info"),
+		BasePath:     "/",
+		DBConnection: getenvStr("MONGO_CONNECTION", "mongodb://root:example@localhost:27017"),
+		DatabaseName: "eventwhisper",
 	}, nil
 }

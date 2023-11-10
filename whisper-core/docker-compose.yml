@@ -53,10 +53,8 @@ services:
     environment:
       MONGODB_SERVER: mongodb
       MONGODB_PORT: 27017
-      MONGODB_ADMINUSERNAME: ${MONGO_USER}
-      MONGODB_ADMINPASSWORD: ${MONGO_PASS}
-      MONGO_CONNECTION: mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017
-      PORT: 5000
+      MONGO_CONNECTION: ${MONGO_CONNECTION}
+      PORT: 8080
     labels:
         - traefik.enable=true
         - traefik.docker.network=traefik_net
@@ -69,6 +67,6 @@ services:
         - traefik.http.routers.whisper_core-secure.tls=true
         - traefik.http.routers.whisper_core-secure.tls.certresolver=http
         - traefik.http.routers.whisper_core-secure.service=whisper_core
-        - traefik.http.services.whisper_core.loadbalancer.server.port=5000
+        - traefik.http.services.whisper_core.loadbalancer.server.port=8080
 
 
