@@ -1,0 +1,26 @@
+version: '3.7'
+
+networks:
+  whisper_backend:
+    external: true
+  traefik_net:
+    external: true
+
+services:
+  touchpoint-telegram:
+    build: .
+    container_name: touchpoint-telegram
+
+    networks:
+      - whisper_backend
+      - traefik_net
+
+    labels:
+      - "traefik.enable=true"
+      - traefik.http.routers.touchpoint-telegram.rule=(Host(`api.eventwhisper.de`)  && Path("/touchpoint/telegram{regex:$$|/.*}"))
+      - "traefik.http.routers.touchpoint-telegram.entrypoints=websecure"
+      - "traefik.http.routers.touchpoint-telegram.tls.certresolver=le"
+      - "traefik.http.routers.touchpoint-telegram.tls=true"
+      - "traefik.http.routers.touchpoint-telegram.service=touchpoint-telegram"
+      - "traefik.http.services.touchpoint-telegram.loadbalancer.server.port=8080"
+      - "traefik.docker.network=traefik_net"
