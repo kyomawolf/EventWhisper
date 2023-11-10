@@ -7,7 +7,7 @@ on:
       - .github/workflows/build-and-deploy-whisper-core.yml
 
 jobs:
-  BuildQrDocker:
+  BuildWhisperCoreDocker:
     runs-on: [self-hosted, linux]
     steps:
       - name: Checkout
