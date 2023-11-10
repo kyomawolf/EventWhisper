@@ -1,0 +1,16 @@
+name: Build and Deploy WhisperCoreApi
+run-name: Build and Deploy WhisperCoreApi
+on:
+  push:
+    paths:
+      - whisper-core/**
+      - .github/workflows/build-and-deploy-whisper-core.yml
+
+jobs:
+  BuildQrDocker:
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Start containers
+        run: docker-compose -f "whisper-core/docker-compose.yml" --env-file "/data/eventwhisper/.env" up -d --build 

@@ -1,0 +1,74 @@
+version: '3.8'
+
+
+networks:
+  traefik_net:
+    external: true
+  backend_whisper:
+    external: true
+
+services:
+  mongodb:
+    image: mongo:6-jammy
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./_data:/data/db
+    networks:
+      - traefik_net
+      - backend_whisper
+
+  mongo-express:
+    image: mongo-express:latest
+    ports:
+      - '8083:8081'
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASS}
+    depends_on:
+      - mongodb
+    networks:
+      - traefik_net
+      - backend_whisper
+
+  whisper_core:
+    container_name: whisper_core
+    build: .
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "100k"
+    depends_on:
+      - mongodb
+    networks:
+      - traefik_net
+      - backend_whisper
+    environment:
+      MONGODB_SERVER: mongodb
+      MONGODB_PORT: 27017
+      MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      MONGODB_ADMINPASSWORD: ${MONGO_PASS}
+      MONGO_CONNECTION: mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017
+      PORT: 5000
+    labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik_net
+        - traefik.http.routers.whisper_core.entrypoints=http
+        - traefik.http.routers.whisper_core.rule=Host("${DOMAIN}")
+        - traefik.http.middlewares.whisper_core-https-redirect.redirectscheme.scheme=https
+        - traefik.http.routers.whisper_core.middlewares=whisper_core-https-redirect
+        - traefik.http.routers.whisper_core-secure.entrypoints=https
+        - traefik.http.routers.whisper_core-secure.rule=Host("${DOMAIN}")
+        - traefik.http.routers.whisper_core-secure.tls=true
+        - traefik.http.routers.whisper_core-secure.tls.certresolver=http
+        - traefik.http.routers.whisper_core-secure.service=whisper_core
+        - traefik.http.services.whisper_core.loadbalancer.server.port=5000
+
+
