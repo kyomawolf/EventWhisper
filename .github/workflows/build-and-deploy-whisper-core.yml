@@ -13,4 +13,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Start containers
-        run: docker-compose -f "whisper-core/docker-compose.yml" --env-file "/data/eventwhisper/.env" up -d --build 
+        run: docker-compose -f "whisper-core/docker-compose.yml" --env-file "/data/eventwhisper/whisper-core.env" up -d --build 
