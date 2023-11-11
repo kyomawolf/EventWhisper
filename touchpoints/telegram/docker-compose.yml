@@ -15,9 +15,14 @@ services:
       - whisper_backend
       - traefik_net
 
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - WHISPER_API_TOKEN=${WHISPER_API_TOKEN}
+      - TELEGRAM_API_TOKEN=${TELEGRAM_API_TOKEN}
+
     labels:
       - "traefik.enable=true"
-      - traefik.http.routers.touchpoint-telegram.rule=(Host(`api.eventwhisper.de`)  && Path("/touchpoint/telegram{regex:$$|/.*}"))
+      - traefik.http.routers.touchpoint-telegram.rule=(Host(`touchpoints.eventwhisper.de`)  && Path("/telegram{regex:$$|/.*}"))
       - "traefik.http.routers.touchpoint-telegram.entrypoints=websecure"
       - "traefik.http.routers.touchpoint-telegram.tls.certresolver=le"
       - "traefik.http.routers.touchpoint-telegram.tls=true"
