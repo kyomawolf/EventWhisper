@@ -19,6 +19,8 @@ services:
     networks:
       - traefik_net
       - backend_whisper
+    volumes:
+      - ${DB_FILE_PATH}:/app/_data
     environment:
       MONGODB_SERVER: mongodb
       MONGODB_PORT: 27017

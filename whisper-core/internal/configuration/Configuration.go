@@ -44,6 +44,6 @@ func LoadConfig() (*Config, error) {
 		DBConnection: getenvStr("MONGO_CONNECTION", "mongodb://root:example@localhost:27017"),
 		DatabaseName: "eventwhisper",
 		ApiKey:       getenvStr("API_KEY", "CHANGEME"),
-		DBFilePath:   getenvStr("DB_FILE_PATH", "./_data"),
+		DBFilePath:   "/app/_data",
 	}, nil
 }
