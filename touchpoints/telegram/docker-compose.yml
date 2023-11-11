@@ -1,7 +1,7 @@
 version: '3.7'
 
 networks:
-  whisper_backend:
+  backend_whisper:
     external: true
   traefik_net:
     external: true
@@ -12,7 +12,7 @@ services:
     container_name: touchpoint-telegram
 
     networks:
-      - whisper_backend
+      - backend_whisper
       - traefik_net
 
     environment:
@@ -21,11 +21,15 @@ services:
       - TELEGRAM_API_TOKEN=${TELEGRAM_API_TOKEN}
 
     labels:
-      - "traefik.enable=true"
-      - traefik.http.routers.touchpoint-telegram.rule=(Host(`touchpoints.eventwhisper.de`)  && Path("/telegram{regex:$$|/.*}"))
-      - "traefik.http.routers.touchpoint-telegram.entrypoints=websecure"
-      - "traefik.http.routers.touchpoint-telegram.tls.certresolver=le"
-      - "traefik.http.routers.touchpoint-telegram.tls=true"
-      - "traefik.http.routers.touchpoint-telegram.service=touchpoint-telegram"
-      - "traefik.http.services.touchpoint-telegram.loadbalancer.server.port=8080"
-      - "traefik.docker.network=traefik_net"
+      - traefik.enable=true
+      - traefik.docker.network=traefik_net
+      - traefik.http.routers.whisper_touchpoint_telegram.entrypoints=http
+      - traefik.http.routers.whisper_touchpoint_telegram.rule=(Host(`touchpoints.eventwhisper.de`)  && Path("/telegram{regex:$$|/.*}"))
+      - traefik.http.middlewares.whisper_touchpoint_telegram-https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.whisper_touchpoint_telegram.middlewares=whisper_touchpoint_telegram-https-redirect
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.entrypoints=https
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.rule=(Host(`touchpoints.eventwhisper.de`)  && Path("/telegram{regex:$$|/.*}"))
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.tls=true
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.tls.certresolver=http
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.service=whisper_touchpoint_telegram
+      - traefik.http.services.whisper_touchpoint_telegram.loadbalancer.server.port=8080
