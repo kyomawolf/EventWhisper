@@ -24,6 +24,10 @@ func (s *EventStore) InsertEvent(event Event) (*Event, error) {
 	return &event, nil
 }
 
+func (s *EventStore) ReadAllEvents() ([]Event, error) {
+	return s.Events, nil
+}
+
 func (s *EventStore) ReadEvent(id string) (*Event, error) {
 	var model Event
 
