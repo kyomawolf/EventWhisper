@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # pylint: disable=unused-argument
+import asyncio
 import json
 
 import requests
@@ -7,9 +8,11 @@ import logging
 import os
 
 import openai
+import uvicorn
+from asgiref.wsgi import WsgiToAsgi
 from openai import OpenAI
 
-from flask import Flask, request
+from flask import Flask, Response, abort, make_response, request
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
@@ -186,7 +189,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 
 
-def main() -> None:
+async def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(os.environ['TELEGRAM_API_TOKEN']).build()
@@ -206,32 +209,40 @@ def main() -> None:
     )
 
     application.add_handler(conv_handler)
+    app = Flask(__name__)
 
-    # Run the bot until the user presses Ctrl-C
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    @app.route("/new-event", methods=["POST"])
+    def hello():
+        if request.method == "POST":
+            formatted = request.json
 
+            for idx in formatted["identity"]["channels"]:
+                if idx == "telegram":
+                    print(formatted["message"])
+                    url = 'https://api.telegram.org/bot/sendMessage?chat_id=' + \
+                          formatted['identity']['channels']['specifics']['chatId'] + '&text=' + formatted['message']
+                    ret = requests.post(url)
+                    print("Response from telegram: " + ret.text)
+                    return "OK", 200
+        return 403  # Forbidden
 
-app = Flask(__name__)
+    webserver = uvicorn.Server(
+        config=uvicorn.Config(
+            app=WsgiToAsgi(app),
+            port=8080,
+            use_colors=False,
+            host="127.0.0.1",
+        )
+    )
 
-
-@app.route("/new-event", methods=["POST"])
-def hello():
-    if request.method == "POST":
-        formatted = request.json
-
-        for idx in formatted["identity"]["channels"]:
-            if idx == "telegram":
-                print(formatted["message"])
-                url = 'https://api.telegram.org/bot/sendMessage?chat_id=' + formatted['identity']['channels']['specifics']['chatId'] + '&text=' + formatted['message']
-                ret = requests.post(url)
-                print("Response from telegram: " + ret.text)
-                return "OK", 200
-    return 403 # Forbidden
+    async with application:
+        await application.run_polling(allowed_updates=Update.ALL_TYPES)
+        await webserver.serve()
+        await application.stop()
 
 
 
 if __name__ == "__main__":
 
     logger.setLevel(logging.DEBUG)
-
-    main()
+    asyncio.run(main())
