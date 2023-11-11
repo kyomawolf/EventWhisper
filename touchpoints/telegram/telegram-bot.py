@@ -179,6 +179,8 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return ConversationHandler.END
 
 
+
+
 def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
@@ -215,6 +217,9 @@ def hello():
         for idx in formatted["identity"]["channels"]:
             if idx == "telegram":
                 print(formatted["message"])
+                url = 'https://api.telegram.org/bot/sendMessage?chat_id=' + formatted['identity']['channels']['specifics']['chatId'] + '&text=' + formatted['message']
+                ret = requests.post(url)
+                print("Response from telegram: " + ret.text)
                 return "OK", 200
     return 403 # Forbidden
 
