@@ -22,6 +22,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = server.ConfigureRouter()
+	if err != nil {
+		log.Errorf("Error configuring router: %v", err)
+		os.Exit(1)
+	}
+
 	err = server.Start()
 	if err != nil {
 		log.Errorf("Error starting server: %v", err)

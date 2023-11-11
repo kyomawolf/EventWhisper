@@ -38,6 +38,8 @@ func (s *Server) ConfigureRouter() error {
 
 	router.Path(fmt.Sprintf("%v/identity", s.Config.BasePath)).HandlerFunc(options).Methods("OPTIONS")
 	router.Path(fmt.Sprintf("%v/identity", s.Config.BasePath)).HandlerFunc(s.IdentityHandler.PostIdentity).Methods("POST")
+	router.Path(fmt.Sprintf("%v/identity/{sub}", s.Config.BasePath)).HandlerFunc(options).Methods("OPTIONS")
+	router.Path(fmt.Sprintf("%v/identity/{sub}", s.Config.BasePath)).HandlerFunc(s.IdentityHandler.GetIdentity).Methods("GET")
 
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 

@@ -38,7 +38,7 @@ func LoadConfig() (*Config, error) {
 	return &Config{
 		Port:         getenvInt("PORT", 8080),
 		LogLevel:     getenvStr("LOG_LEVEL", "info"),
-		BasePath:     "/",
+		BasePath:     "",
 		DBConnection: getenvStr("MONGO_CONNECTION", "mongodb://root:example@localhost:27017"),
 		DatabaseName: "eventwhisper",
 	}, nil
