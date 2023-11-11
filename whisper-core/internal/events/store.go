@@ -17,7 +17,21 @@ func NewEventStore(config *configuration.Config) (*EventStore, error) {
 	}, nil
 }
 
-func (s *EventStore) InsertEvent(event Event) (*Event, error) {
+type EventInsertError string
+
+var (
+	ErrEventAlreadyExists EventInsertError = "Event already exists"
+	ErrGeneralInsertError EventInsertError = "General insert error"
+)
+
+func (s *EventStore) InsertEvent(event Event) (*Event, *EventInsertError) {
+
+	for _, m := range s.Events {
+		if m.Url == event.Url {
+			return &m, &ErrEventAlreadyExists
+		}
+	}
+
 	event.ID = uuid.New().String()
 	s.Events = append(s.Events, event)
 

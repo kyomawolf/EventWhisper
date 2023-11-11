@@ -8,5 +8,7 @@ type Event struct {
 	StartTime   string   `json:"start_time"`
 	EndTime     string   `json:"end_time"`
 	Organizer   string   `json:"organizer"`
+	Pricing     string   `json:"pricing"`
+	Url         string   `json:"url"`
 	Interest    []string `json:"interest"`
 }

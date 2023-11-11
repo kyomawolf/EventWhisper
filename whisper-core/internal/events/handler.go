@@ -101,8 +101,17 @@ func (h *EventHandler) PostEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	insertedEvent, err := h.Store.InsertEvent(event)
-	if err != nil {
+	insertedEvent, errInsert := h.Store.InsertEvent(event)
+	if errInsert == &ErrEventAlreadyExists {
+		log.Errorf("Error inserting Event: %v", err)
+		w.WriteHeader(http.StatusConflict)
+		_, e := w.Write([]byte("Event already exists"))
+		if e != nil {
+			log.Errorf("Error writing response: %v", e)
+		}
+		return
+	}
+	if errInsert != nil {
 		log.Errorf("Error inserting Event: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
