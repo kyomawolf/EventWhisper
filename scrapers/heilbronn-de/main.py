@@ -263,6 +263,25 @@ Please also fix html entities like &auml; or &ouml; or any other encoded or esca
     return json.loads(response.choices[0].message.content)
 
 
+def get_known_urls():
+    url = "https://api.eventwhisper.de/events"
+
+    api_key = os.environ.get("API_KEY")
+
+    # Define the authorization header
+    headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
+
+    reponse = requests.get(url, headers=headers)
+
+    if reponse.status_code == 200:
+        print("Events loaded successfully!")
+
+        events = json.loads(reponse.text)
+
+        return list(map(lambda event: event["url"], events))
+    
+    return []
+
 
 def main():
     try:
@@ -270,6 +289,14 @@ def main():
         event_urls = load_event_urls(url)
 
         print(len(event_urls))
+
+
+
+        known_urls = get_known_urls()
+        event_urls = list(filter(lambda url: url not in known_urls, event_urls))
+
+        print("new urls: " + str(len(event_urls)))
+
 
         for event_url in event_urls:
             try:
