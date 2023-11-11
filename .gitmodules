@@ -1,0 +1,3 @@
+[submodule "website/EventWhisper/themes/theme-name"]
+	path = website/EventWhisper/themes/theme-name
+	url = https://github.com/zerostaticthemes/hugo-serif-theme.git
