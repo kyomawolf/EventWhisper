@@ -1,2 +1,5 @@
 python-telegram-bot
 logging
+os
+openai
+flask

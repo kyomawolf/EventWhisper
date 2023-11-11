@@ -1,20 +1,13 @@
 #!/usr/bin/env python
 # pylint: disable=unused-argument
-# This program is dedicated to the public domain under the CC0 license.
-
-"""
-First, a few callback functions are defined. Then, those functions are passed to
-the Application and registered at their respective places.
-Then, the bot is started and runs until we press Ctrl-C on the command line.
-
-Usage:
-Example of a bot-user conversation using ConversationHandler.
-Send /start to initiate the conversation.
-Press Ctrl-C on the command line or send a signal to the process to stop the
-bot.
-"""
 
 import logging
+import os
+
+import openai
+from openai import OpenAI
+
+from flask import Flask, request
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
@@ -26,6 +19,18 @@ from telegram.ext import (
     filters,
 )
 
+
+class user:
+    def __init__(self, new_chatid):
+        self.chatid = new_chatid
+        self.name = None
+        self.location = None
+        self.interests = None
+
+
+user_list = []
+
+
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -36,103 +41,54 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 INTERESTS, LOCATION = range(2)
+openaiClient = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+
+interests = ['Musik', 'Kunst', 'Sport', 'Theater', 'Film', 'Bildung', 'Mode', 'Literatur', 'Technologie', 'Business', 'Religion', 'Wohltätigkeit', 'Gastronomie', 'Outdoor', 'Umwelt', 'Markt', 'Spiele', 'Comedy', 'Wissenschaft', 'Politik', 'Festivals', 'Kinder', 'Handwerk']
+interests_as_string = str(', '.join(interests))
 
 
-def ask_gpt(message: str) -> str:
-    return message
+def ask_gpt_location(message: str) -> str:
+    logger.info(message)
+    response = openaiClient.chat.completions.create(messages=[{"role": "user",
+                                                               "content": "Sag mir zu welcher Stadt oder Kreis die PLZ gehört, gib mir die Antwort im format: \"Stadt, Bundesland\", hier ist die deutsche Postleitzahl: " + message}],
+                                                    model='gpt-4')
+    return response.choices[0].message.content
+
+
+def ask_gpt_interests(message: str) -> str:
+    logger.info(message)
+    response = openaiClient.chat.completions.create(messages=[{"role": "user", "content": ": welche interessen hat diese Person? Gib mir deine Antwort passend zu der List hier:" + interests_as_string + ". Hier Antwort der Person: " + message}], model='gpt-4')
+
+    return response.choices[0].message.content
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    filtered_message = ask_gpt(update.message.text)
+    user_list.append(user(update.message.chat_id))
+    print(user_list[-1].chatid)
     await update.message.reply_text("Hey gib mir deine Postleitzahl, damit ich deine persönlichen noch profitabler verkaufen kann!")
-    logger.info("%s's location is: %s", update.message.from_user, filtered_message)
 
     return LOCATION
 
 
 async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-
+    filtered_message = ask_gpt_location(update.message.text)
     await update.message.reply_text("Hey gib mir deine Interessen!")
-    logger.info("%s's location is: %s", update.message.from_user, update.message.text)
+    logger.info("%s's location is: %s", update.message.from_user, filtered_message)
+    for user in user_list:
+        if user.chatid == update.message.chat_id:
+            user.location = filtered_message
     return INTERESTS
 
 
 async def interests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    mapped_interests = ask_gpt_interests(update.message.text)
 
-    logger.info("%s's interests are: %s", update.message.from_user, update.message.text)
+    logger.info("%s's interests are: %s", update.message.from_user, mapped_interests)
+    for user in user_list:
+        if user.chatid == update.message.chat_id:
+            user.interests = mapped_interests
+    print("chat id: %i, location: %s, interests: %s", user_list[-1]. chatid, user_list[-1].location, user_list[-1].interests)
     return ConversationHandler.END
-
-#
-# async def gender(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-#     """Stores the selected gender and asks for a photo."""
-#     user = update.message.from_user
-#     logger.info("Gender of %s: %s", user.first_name, update.message.text)
-#     await update.message.reply_text(
-#         "I see! Please send me a photo of yourself, "
-#         "so I know what you look like, or send /skip if you don't want to.",
-#         reply_markup=ReplyKeyboardRemove(),
-#     )
-#
-#     return PHOTO
-#
-#
-# async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-#     """Stores the photo and asks for a location."""
-#     user = update.message.from_user
-#     photo_file = await update.message.photo[-1].get_file()
-#     await photo_file.download_to_drive("user_photo.jpg")
-#     logger.info("Photo of %s: %s", user.first_name, "user_photo.jpg")
-#     await update.message.reply_text(
-#         "Gorgeous! Now, send me your location please, or send /skip if you don't want to."
-#     )
-#
-#     return LOCATION
-#
-#
-# async def skip_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-#     """Skips the photo and asks for a location."""
-#     user = update.message.from_user
-#     logger.info("User %s did not send a photo.", user.first_name)
-#     await update.message.reply_text(
-#         "I bet you look great! Now, send me your location please, or send /skip."
-#     )
-#
-#     return LOCATION
-#
-#
-# async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-#     """Stores the location and asks for some info about the user."""
-#     user = update.message.from_user
-#     user_location = update.message.location
-#     logger.info(
-#         "Location of %s: %f / %f", user.first_name, user_location.latitude, user_location.longitude
-#     )
-#     await update.message.reply_text(
-#         "Maybe I can visit you sometime! At last, tell me something about yourself."
-#     )
-#
-#     return BIO
-#
-#
-# async def skip_location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-#     """Skips the location and asks for info about the user."""
-#     user = update.message.from_user
-#     logger.info("User %s did not send a location.", user.first_name)
-#     await update.message.reply_text(
-#         "You seem a bit paranoid! At last, tell me something about yourself."
-#     )
-#
-#     return BIO
-#
-#
-# async def bio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-#     """Stores the info about the user and ends the conversation."""
-#     user = update.message.from_user
-#     logger.info("Bio of %s: %s", user.first_name, update.message.text)
-#     await update.message.reply_text("Thank you! I hope we can talk again some day.")
-#
-#     return ConversationHandler.END
-
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancels and ends the conversation."""
@@ -148,7 +104,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("6827801212:AAHnkm0r2TSfvy0auM4dA-Iyme3EfF7zTRM").build()
+    application = Application.builder().token(os.environ['API_TOKEN']).build()
 
     # Add conversation handler with the states GENDER, PHOTO, LOCATION and BIO
     conv_handler = ConversationHandler(
@@ -167,6 +123,21 @@ def main() -> None:
 
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+
+app = Flask(__name__)
+
+
+@app.route("/new-event", methods=["POST"])
+def hello():
+    if request.method == "POST":
+        formatted = request.json
+
+        for idx in formatted["identity"]["channels"]:
+            if idx == "telegram":
+                print(formatted["message"])
+                return "OK", 200
+    return 403 # Forbidden
 
 
 if __name__ == "__main__":
