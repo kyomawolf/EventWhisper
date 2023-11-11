@@ -161,6 +161,7 @@ async def interests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     local_user.interest = mapped_interests
     logger.debug("chat id: %i, location: %s, interests: %s", local_user.sub, local_user.location, local_user.interest)
     msg = await update.message.reply_text("Danke für deine Angaben. Wenn wir tolle neue Evetns finden, dann Benachrichtigen wir dich sofort!")
+    logger.debug(msg)
     
     logger.debug("sending data to api")
     send_data(local_user)
