@@ -159,12 +159,12 @@ async def interests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if local_user is None:
         return ConversationHandler.END
     local_user.interest = mapped_interests
-    print("chat id: %i, location: %s, interests: %s", local_user.sub, local_user.location, local_user.interest)
-    await update.message.reply_text("Danke für deine Angaben. Wenn wir tolle neue Evetns finden, dann Benachrichtigen wir dich sofort!")
+    logger.debug("chat id: %i, location: %s, interests: %s", local_user.sub, local_user.location, local_user.interest)
+    msg = await update.message.reply_text("Danke für deine Angaben. Wenn wir tolle neue Evetns finden, dann Benachrichtigen wir dich sofort!")
     
-    print("sending data to api")
+    logger.debug("sending data to api")
     send_data(local_user)
-    print("data sent")
+    logger.debug("data sent")
 
     user_list.remove(local_user)
 
@@ -230,4 +230,7 @@ def hello():
 
 
 if __name__ == "__main__":
+
+    logger.setLevel(logging.DEBUG)
+
     main()
