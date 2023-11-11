@@ -66,15 +66,15 @@ interests_as_string = str(', '.join(interests))
 
 def ask_gpt_location(message: str) -> str:
     logger.info(message)
-    return message
-    # response = openaiClient.chat.completions.create(messages=[{"role": "user",
-    #                                                            "content": "Sag mir zu welcher Stadt oder Kreis die PLZ gehört, gib mir die Antwort im format: \"Stadt, Bundesland\", hier ist die deutsche Postleitzahl: " + message}],
-    #                                                 model='gpt-4')
-    # return response.choices[0].message.content
+    # return message
+    response = openaiClient.chat.completions.create(messages=[{"role": "user",
+                                                               "content": "Sag mir zu welcher Stadt oder Kreis die PLZ gehört, gib mir die Antwort im format: \"Stadt, Bundesland\", hier ist die deutsche Postleitzahl: " + message}],
+                                                    model='gpt-4')
+    return response.choices[0].message.content
 
 
 def ask_gpt_name(message: str) -> str:
-    return message
+    # return message
     logger.info(message)
     response = openaiClient.chat.completions.create(messages=[{"role": "user",
                                                                "content": "Wie heisst die Person: " + message}],
@@ -84,7 +84,7 @@ def ask_gpt_name(message: str) -> str:
 
 
 def ask_gpt_interests(message: str):
-    return message.split(',')
+    # return message.split(',')
     logger.info(message)
     response = openaiClient.chat.completions.create(messages=[{"role": "user", "content": ": welche interessen hat diese Person? Gib mir deine Antwort passend zu der List hier:" + interests_as_string + ". Hier Antwort der Person: " + message}], model='gpt-4')
 
