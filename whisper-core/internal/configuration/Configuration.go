@@ -12,6 +12,7 @@ type Config struct {
 	BasePath     string
 	DBConnection string
 	DatabaseName string
+	ApiKey       string
 }
 
 var ErrEnvVarEmpty = errors.New("getenv: environment variable empty")
@@ -41,5 +42,6 @@ func LoadConfig() (*Config, error) {
 		BasePath:     "",
 		DBConnection: getenvStr("MONGO_CONNECTION", "mongodb://root:example@localhost:27017"),
 		DatabaseName: "eventwhisper",
+		ApiKey:       getenvStr("API_KEY", "CHANGEME"),
 	}, nil
 }
