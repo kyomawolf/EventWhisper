@@ -22,12 +22,6 @@ def get_single_event(event_url):
     title = event_soup.find("header", {"class": "pageTitle"}).find("h1").text.strip()
     location = event_soup.find("div", {"class": "address"}).find("p").text.strip()
 
-    description = (
-        event_soup.find("header", {"class": "pageTitle"})
-        .find_next_sibling("div", {"class": "row"})
-        .find("div")
-        .text.strip()
-    )
 
     pricing = ""
     pricing_div = event_soup.find("div", {"id": "prices"})
@@ -38,6 +32,12 @@ def get_single_event(event_url):
     organizer_div = event_soup.find("div", {"id": "contributor"})
     if organizer_div is not None:
         organizer = organizer_div.find("div", {"class": "tab-element"}).text.strip()
+
+    # event_soup.find("header", {"class": "pageTitle"}).find("h1").span.decompose()
+    event_soup.find("header", {"class": "pageTitle"}).find_next_sibling("div", {"class": "row"}).find("div").find("div", { "class": "images"}).decompose()
+    event_soup.find("header", {"class": "pageTitle"}).find_next_sibling("div", {"class": "row"}).find("div").find("div", { "class": "accordion"}).decompose()
+
+    description = event_soup.find("header", {"class": "pageTitle"}).find_next_sibling("div", {"class": "row"}).find("div").text.strip()
 
     pattern = re.compile(r"\s\s+")
     title = re.sub(pattern, " ", title)
@@ -109,7 +109,8 @@ def send_event(eventObject):
 def load_interests(event):
     promt = "Unten findest du die Beschreibung eines Events. Sieh sie dir bitte an und versuche fünf der Interessen zuzuordnen, die deiner Meinung nach zum Event passen. Gibt mir nur die Kategorien ohne weitere Erklärung als JSON Object im Schema { 'interests': ['interest_1','interest_2'] } zurück"
     promt += "\n\n"
-    promt += "Die Kategorien sind  Ausstellungen, Konzerte, Theateraufführungen, Lesungen, Filmvorführungen, Festivals, Sportveranstaltungen, Freizeitaktivitäten, Outdoor-Aktivitäten, Spiel- und Brettspiele, Tanzveranstaltungen, Vorträge, Seminare, Workshops, Konferenzen, Bildungsreisen, Demonstrationen, Podiumsdiskussionen, Wahlkampfveranstaltungen, Charity-Events, Kochkurse, Weinproben, Food-Festivals, Gesundheitsveranstaltungen, Beauty-Events, Kinderfeste, Familienausflüge, Spiel- und Bastelnachmittage, Kindertheater, Kinderbuchlesungen, Tierschutzveranstaltungen, Tierausstellungen, Hunderennen, Reitturniere, Vogelbeobachtung, Naturwanderungen, Umweltschutzveranstaltungen, Öko-Festivals, Sternenbeobachtung, Gottesdienste, Andachten, Meditationskurse, Pilgerreisen, Gebetstreffen, Messen, Kongresse, Workshops, Produktpräsentationen, Startup-Events, Networking-Events, Konferenzen, Seminare, Messen, Job-Messen"
+    promt  +=  "Die  Kategorien  sind:  'Ausstellungen',  'Konzerte',  'Theateraufführungen',  'Lesungen',  'Filmvorführungen',  'Festivals',  'Sportveranstaltungen',  'Freizeitaktivitäten',  'Outdoor-Aktivitäten',  'Spiel-  'und  'Brettspiele',  'Tanzveranstaltungen',  'Vorträge',  'Seminare',  'Workshops',  'Konferenzen',  'Bildungsreisen',  'Demonstrationen',  'Podiumsdiskussionen',  'Wahlkampfveranstaltungen',  'Charity-Events',  'Kochkurse',  'Weinproben',  'Food-Festivals',  'Gesundheitsveranstaltungen',  'Beauty-Events',  'Kinderfeste',  'Familienausflüge',  'Spiel-  'und  'Bastelnachmittage',  'Kindertheater',  'Kinderbuchlesungen',  'Tierschutzveranstaltungen',  'Tierausstellungen',  'Hunderennen',  'Reitturniere',  'Vogelbeobachtung',  'Naturwanderungen',  'Umweltschutzveranstaltungen',  'Öko-Festivals',  'Sternenbeobachtung',  'Gottesdienste',  'Andachten',  'Meditationskurse',  'Pilgerreisen',  'Gebetstreffen',  'Messen',  'Kongresse',  'Workshops',  'Produktpräsentationen',  'Startup-Events',  'Networking-Events',  'Konferenzen',  'Seminare',  'Messen',  'Job-Messen'"
+    # promt += "Die Kategorien sind: Ausstellungen, Konzerte, Theateraufführungen, Lesungen, Filmvorführungen, Festivals, Sportveranstaltungen, Freizeitaktivitäten, Outdoor-Aktivitäten, Spiel- und Brettspiele, Tanzveranstaltungen, Vorträge, Seminare, Workshops, Konferenzen, Bildungsreisen, Demonstrationen, Podiumsdiskussionen, Wahlkampfveranstaltungen, Charity-Events, Kochkurse, Weinproben, Food-Festivals, Gesundheitsveranstaltungen, Beauty-Events, Kinderfeste, Familienausflüge, Spiel- und Bastelnachmittage, Kindertheater, Kinderbuchlesungen, Tierschutzveranstaltungen, Tierausstellungen, Hunderennen, Reitturniere, Vogelbeobachtung, Naturwanderungen, Umweltschutzveranstaltungen, Öko-Festivals, Sternenbeobachtung, Gottesdienste, Andachten, Meditationskurse, Pilgerreisen, Gebetstreffen, Messen, Kongresse, Workshops, Produktpräsentationen, Startup-Events, Networking-Events, Konferenzen, Seminare, Messen, Job-Messen"
     promt += "\n\n"
     promt += "Die Beschreibung ist:\n"
     # promt += ""
