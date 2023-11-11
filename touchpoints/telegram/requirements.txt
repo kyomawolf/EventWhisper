@@ -3,3 +3,4 @@ logging
 os
 openai
 flask
+requests

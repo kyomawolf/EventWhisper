@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # pylint: disable=unused-argument
+import json
 
+import requests
 import logging
 import os
 
@@ -20,16 +22,30 @@ from telegram.ext import (
 )
 
 
+class channel:
+    def __init__(self, channel_id):
+        self.id = None
+        self.channelname = "telegram"
+        self.type = "directmessage"
+        self.specifics = { "chatId": str(channel_id) }
+
+
 class user:
-    def __init__(self, new_chatid):
-        self.chatid = new_chatid
+    def __init__(self, sub):
+        self.sub = sub
         self.name = None
         self.location = None
-        self.interests = None
+        self.interest = []
+        self.channels = []
 
 
 user_list = []
 
+def find_by_id(userid):
+    for user in user_list:
+        if user.sub == userid:
+            return user
+    return None
 
 # Enable logging
 logging.basicConfig(
@@ -40,7 +56,8 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-INTERESTS, LOCATION = range(2)
+INTERESTS, LOCATION, NAME = range(3)
+
 openaiClient = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
 interests = ['Musik', 'Kunst', 'Sport', 'Theater', 'Film', 'Bildung', 'Mode', 'Literatur', 'Technologie', 'Business', 'Religion', 'Wohltätigkeit', 'Gastronomie', 'Outdoor', 'Umwelt', 'Markt', 'Spiele', 'Comedy', 'Wissenschaft', 'Politik', 'Festivals', 'Kinder', 'Handwerk']
@@ -49,13 +66,25 @@ interests_as_string = str(', '.join(interests))
 
 def ask_gpt_location(message: str) -> str:
     logger.info(message)
+    return message
+    # response = openaiClient.chat.completions.create(messages=[{"role": "user",
+    #                                                            "content": "Sag mir zu welcher Stadt oder Kreis die PLZ gehört, gib mir die Antwort im format: \"Stadt, Bundesland\", hier ist die deutsche Postleitzahl: " + message}],
+    #                                                 model='gpt-4')
+    # return response.choices[0].message.content
+
+
+def ask_gpt_name(message: str) -> str:
+    return message
+    logger.info(message)
     response = openaiClient.chat.completions.create(messages=[{"role": "user",
-                                                               "content": "Sag mir zu welcher Stadt oder Kreis die PLZ gehört, gib mir die Antwort im format: \"Stadt, Bundesland\", hier ist die deutsche Postleitzahl: " + message}],
+                                                               "content": "Wie heisst die Person: " + message}],
                                                     model='gpt-4')
     return response.choices[0].message.content
 
 
-def ask_gpt_interests(message: str) -> str:
+
+def ask_gpt_interests(message: str):
+    return message.split(',')
     logger.info(message)
     response = openaiClient.chat.completions.create(messages=[{"role": "user", "content": ": welche interessen hat diese Person? Gib mir deine Antwort passend zu der List hier:" + interests_as_string + ". Hier Antwort der Person: " + message}], model='gpt-4')
 
@@ -64,30 +93,77 @@ def ask_gpt_interests(message: str) -> str:
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_list.append(user(update.message.chat_id))
-    print(user_list[-1].chatid)
-    await update.message.reply_text("Hey gib mir deine Postleitzahl, damit ich deine persönlichen noch profitabler verkaufen kann!")
+    await update.message.reply_text("Hey ich bin EventWhisper, ich kann dir Events vorschlangen. Basierend auf deinen Interessen und deinem Standort. Wie heisst du denn?")
+    return NAME
 
+
+async def name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    name = update.message.from_user
+    local_user = find_by_id(update.message.chat_id)
+    if local_user is None:
+       return ConversationHandler.END
+    local_user.name = name
+    await update.message.reply_text("Willst du mir auch deine Postleitzahl geben? Dann kann ich dir Events in deiner Nähe vorschlagen.")
+    print(local_user.name)
     return LOCATION
 
 
 async def location(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     filtered_message = ask_gpt_location(update.message.text)
-    await update.message.reply_text("Hey gib mir deine Interessen!")
     logger.info("%s's location is: %s", update.message.from_user, filtered_message)
-    for user in user_list:
-        if user.chatid == update.message.chat_id:
-            user.location = filtered_message
+    local_user = find_by_id(update.message.chat_id)
+    if local_user is None:
+       return ConversationHandler.END
+    local_user.location = filtered_message
+    await update.message.reply_text("Willst du mir auch deine Interessen geben? Dann kann ich dir Events vorschlagen die dich interessieren.")
     return INTERESTS
+
+
+def send_data(data):
+
+    data.channels.append(channel(data.sub))
+    data.channels[0].id = data.sub
+
+    print(type(data.sub))
+    print(type(data.name.first_name))
+    print(type(data.interest))
+    print(type(data.location))
+    print(type(data.channels[0].id))
+    print(type(data.channels[0].channelname))
+    print(type(data.channels[0].type))
+    print(type(data.channels[0].specifics))
+    local_dict = {
+        'sub': str(data.sub),
+        'name': str(data.name.first_name),
+        'interests': data.interest,
+        'location': data.location,
+        'channels': [{
+            'id': str(data.channels[0].id),
+            'channelname': data.channels[0].channelname,
+            'type': data.channels[0].type,
+            'specifics': data.channels[0].specifics
+        }],
+        "announcedEvents": []
+    }
+    dump = json.dumps(local_dict)
+    print(dump)
+    res = requests.post('https://api.eventwhisper.de/identity', headers={'Authorization': os.environ['EVENT_W_API_TOKEN'], 'Content-Type': 'application/json'}, data=dump)
+    print ('response from server:', res.text)
 
 
 async def interests(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     mapped_interests = ask_gpt_interests(update.message.text)
 
     logger.info("%s's interests are: %s", update.message.from_user, mapped_interests)
-    for user in user_list:
-        if user.chatid == update.message.chat_id:
-            user.interests = mapped_interests
-    print("chat id: %i, location: %s, interests: %s", user_list[-1]. chatid, user_list[-1].location, user_list[-1].interests)
+    local_user = find_by_id(update.message.chat_id)
+    if local_user is None:
+        return ConversationHandler.END
+    local_user.interest = mapped_interests
+    print("chat id: %i, location: %s, interests: %s", local_user.sub, local_user.location, local_user.interest)
+    await update.message.reply_text("Danke für deine Angaben. Wenn wir tolle neue Evetns finden, dann Benachrichtigen wir dich sofort!")
+    send_data(local_user)
+    user_list.remove(local_user)
+
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -97,7 +173,9 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(
         "Bye! I hope we can talk again some day.", reply_markup=ReplyKeyboardRemove()
     )
-
+    local = find_by_id(update.message.chat_id)
+    if local is not None:
+        user_list.remove(local)
     return ConversationHandler.END
 
 
@@ -111,6 +189,7 @@ def main() -> None:
         entry_points=[CommandHandler("start", start)],
         states={
             INTERESTS: [MessageHandler(filters.TEXT & ~filters.COMMAND, interests)],
+            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, name)],
             LOCATION: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, location)
                 # CommandHandler("skip", skip_location),
@@ -138,6 +217,7 @@ def hello():
                 print(formatted["message"])
                 return "OK", 200
     return 403 # Forbidden
+
 
 
 if __name__ == "__main__":
