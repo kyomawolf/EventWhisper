@@ -51,6 +51,7 @@ func (s *Server) ConfigureRouter() error {
 
 	router.Path(fmt.Sprintf("%v/events", s.Config.BasePath)).HandlerFunc(options).Methods("OPTIONS")
 	router.Path(fmt.Sprintf("%v/events", s.Config.BasePath)).HandlerFunc(s.EventHandler.PostEvent).Methods("POST")
+	router.Path(fmt.Sprintf("%v/events", s.Config.BasePath)).HandlerFunc(s.EventHandler.GetAllEvents).Methods("GET")
 	router.Path(fmt.Sprintf("%v/events/{eventid}", s.Config.BasePath)).HandlerFunc(options).Methods("OPTIONS")
 	router.Path(fmt.Sprintf("%v/events/{eventid}", s.Config.BasePath)).HandlerFunc(s.EventHandler.GetEvent).Methods("GET")
 
