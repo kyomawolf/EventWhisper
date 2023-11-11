@@ -107,9 +107,10 @@ def send_event(eventObject):
 
 
 def load_interests(event):
+    
     promt = "Unten findest du die Beschreibung eines Events. Sieh sie dir bitte an und versuche fünf der Interessen zuzuordnen, die deiner Meinung nach zum Event passen. Gibt mir nur die Kategorien ohne weitere Erklärung als JSON Object im Schema { 'interests': ['interest_1','interest_2'] } zurück"
     promt += "\n\n"
-    promt  +=  "Die  Kategorien  sind:  'Ausstellungen',  'Konzerte',  'Theateraufführungen',  'Lesungen',  'Filmvorführungen',  'Festivals',  'Sportveranstaltungen',  'Freizeitaktivitäten',  'Outdoor-Aktivitäten',  'Spiel-  'und  'Brettspiele',  'Tanzveranstaltungen',  'Vorträge',  'Seminare',  'Workshops',  'Konferenzen',  'Bildungsreisen',  'Demonstrationen',  'Podiumsdiskussionen',  'Wahlkampfveranstaltungen',  'Charity-Events',  'Kochkurse',  'Weinproben',  'Food-Festivals',  'Gesundheitsveranstaltungen',  'Beauty-Events',  'Kinderfeste',  'Familienausflüge',  'Spiel-  'und  'Bastelnachmittage',  'Kindertheater',  'Kinderbuchlesungen',  'Tierschutzveranstaltungen',  'Tierausstellungen',  'Hunderennen',  'Reitturniere',  'Vogelbeobachtung',  'Naturwanderungen',  'Umweltschutzveranstaltungen',  'Öko-Festivals',  'Sternenbeobachtung',  'Gottesdienste',  'Andachten',  'Meditationskurse',  'Pilgerreisen',  'Gebetstreffen',  'Messen',  'Kongresse',  'Workshops',  'Produktpräsentationen',  'Startup-Events',  'Networking-Events',  'Konferenzen',  'Seminare',  'Messen',  'Job-Messen'"
+    promt  +=  "Die  Kategorien  sind: 'Technik', 'Ausstellungen', 'Konzerte', 'Theater', 'Lesungen', 'Kino und Film', 'Festivals', 'Sport', 'Outdoor', 'Spiel- und Brettspiele', 'Tanzveranstaltungen', 'Vorträge', 'Seminare', 'Workshops', 'Konferenzen', 'Charity-Events', 'Kochkurse', 'Weinproben', 'Food-Festivals', 'Gesundheitsveranstaltungen', 'Beauty-Events', 'Kinderfeste', 'Familienausflüge', 'Für Kinder', 'Sternenbeobachtung', 'Gottesdienste', 'Gebetstreffen', 'Messen', 'Kongresse', 'Startup-Events', 'Networking-Events', 'Job-Messen'"
     # promt += "Die Kategorien sind: Ausstellungen, Konzerte, Theateraufführungen, Lesungen, Filmvorführungen, Festivals, Sportveranstaltungen, Freizeitaktivitäten, Outdoor-Aktivitäten, Spiel- und Brettspiele, Tanzveranstaltungen, Vorträge, Seminare, Workshops, Konferenzen, Bildungsreisen, Demonstrationen, Podiumsdiskussionen, Wahlkampfveranstaltungen, Charity-Events, Kochkurse, Weinproben, Food-Festivals, Gesundheitsveranstaltungen, Beauty-Events, Kinderfeste, Familienausflüge, Spiel- und Bastelnachmittage, Kindertheater, Kinderbuchlesungen, Tierschutzveranstaltungen, Tierausstellungen, Hunderennen, Reitturniere, Vogelbeobachtung, Naturwanderungen, Umweltschutzveranstaltungen, Öko-Festivals, Sternenbeobachtung, Gottesdienste, Andachten, Meditationskurse, Pilgerreisen, Gebetstreffen, Messen, Kongresse, Workshops, Produktpräsentationen, Startup-Events, Networking-Events, Konferenzen, Seminare, Messen, Job-Messen"
     promt += "\n\n"
     promt += "Die Beschreibung ist:\n"
@@ -131,6 +132,137 @@ def load_interests(event):
 
     return json.loads(response.choices[0].message.content)["interests"]
 
+def fix_data(eventObject):
+    promt = '''
+You are a helpful assistant designed to output JSON. You are given a JSON string representing a part of a calendar. You need to parse it into a proper format.
+
+This is the desired JSON Schema:
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "telefone": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "street",
+        "zip",
+        "city",
+        "country",
+        "telefone",
+        "email"
+      ]
+    },
+    "start_date_time": {
+      "type": "string"
+    },
+    "end_date_time": {
+      "type": "string"
+    },
+    "organizer": {
+      "type": "string"
+    },
+    "pricing": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "interests": {
+      "type": "array",
+      "items": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "description",
+    "location",
+    "start_time",
+    "end_time",
+    "organizer",
+    "pricing",
+    "url",
+    "interests"
+  ]
+}
+
+Please try to parse the following JSON string into the desired format. 
+Pricing should be "Eintritt frei" or the actual price in euros.
+Please answer only the JSON string without any additional text.
+Please also fix html entities like &auml; or &ouml; or any other encoded or escaped characters.
+
+
+'''
+    
+    json_string = json.dumps(eventObject)
+    promt += json_string
+
+    client = OpenAI()
+
+    response = client.chat.completions.create(
+        model="gpt-4-1106-preview",
+        response_format={"type": "json_object"},
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a helpful assistant designed to output JSON.",
+            },
+            {"role": "user", "content": promt},
+        ],
+    )
+
+    return json.loads(response.choices[0].message.content)
+
+
 
 def main():
     try:
@@ -145,7 +277,10 @@ def main():
                 eventObject = get_single_event(event_url)
                 eventObject["interest"] = load_interests(eventObject)
 
-                # print(eventObject)
+                eventObject = fix_data(eventObject)
+
+                print(json.dumps(eventObject, sort_keys=True, indent=4))
+
 
                 send_event(eventObject)
             except Exception as e:

@@ -1,14 +1,24 @@
 package events
 
 type Event struct {
-	ID          string   `json:"id"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Location    string   `json:"location"`
-	StartTime   string   `json:"start_time"`
-	EndTime     string   `json:"end_time"`
-	Organizer   string   `json:"organizer"`
-	Pricing     string   `json:"pricing"`
-	Url         string   `json:"url"`
-	Interest    []string `json:"interest"`
+	ID          string        `json:"id"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Location    EventLocation `json:"location"`
+	StartTime   string        `json:"start_date_time"`
+	EndTime     string        `json:"end_date_time"`
+	Organizer   string        `json:"organizer"`
+	Pricing     string        `json:"pricing"`
+	Url         string        `json:"url"`
+	Interest    []string      `json:"interest"`
+}
+
+type EventLocation struct {
+	City      string `json:"city"`
+	Country   string `json:"country"`
+	Street    string `json:"street"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Telephone string `json:"telephone"`
+	Zip       string `json:"zip"`
 }
