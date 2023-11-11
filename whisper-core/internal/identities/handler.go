@@ -3,7 +3,6 @@ package identities
 import (
 	"encoding/json"
 	"net/http"
-	"path"
 
 	"github.com/gorilla/mux"
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
@@ -23,32 +22,39 @@ func NewIdentityHandler(config *configuration.Config, store *IdentityStore) *Ide
 	}
 }
 
-func (h *IdentityHandler) GetImageAsFile(w http.ResponseWriter, r *http.Request) {
-	log.Debug("The GetImages handler is executing!")
+func (h *IdentityHandler) GetIdentity(w http.ResponseWriter, r *http.Request) {
+	log.Debug("The GetIdentity handler is executing!")
 
-	projectID := mux.Vars(r)["project_id"]
-	if projectID == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		_, e := w.Write([]byte("project_id is required"))
+	vars := mux.Vars(r)
+	sub := vars["sub"]
+
+	identity, err := h.Store.GetIdentity(r.Context(), sub)
+	if err != nil {
+		log.Errorf("Error getting Identity: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
 			log.Errorf("Error writing response: %v", e)
 		}
 		return
 	}
 
-	imgID := mux.Vars(r)["img_id"]
-	if imgID == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		_, e := w.Write([]byte("id is required"))
+	json, err := json.Marshal(identity)
+	if err != nil {
+		log.Errorf("Error marshalling json: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
 			log.Errorf("Error writing response: %v", e)
 		}
+		return
 	}
 
-	imgDir := path.Join("_images/", projectID)
-	imgPath := path.Join(imgDir, imgID+".png")
-
-	http.ServeFile(w, r, imgPath)
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(json)
+	if err != nil {
+		log.Errorf("Error writing response: %v", err)
+	}
 }
 
 func (h *IdentityHandler) PostIdentity(w http.ResponseWriter, r *http.Request) {

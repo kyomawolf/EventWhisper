@@ -1,0 +1,60 @@
+version: "3"
+
+networks:
+  traefik_net:
+    external: true
+  backend_whisper:
+    external: true
+
+services:
+
+  postgres:
+    container_name: msapi_postgres
+    image: postgres:15.4
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "100k"
+    volumes:
+      - ${VOLUMES}/postgres/data:/var/lib/postgresql/data
+    networks:
+      - backend_whisper
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    labels:
+      - traefik.enable=false
+
+  postgres_admin:
+    container_name: msapi_postgres_admin
+    image: dpage/pgadmin4:7.6
+    restart: always
+    depends_on:
+      - postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "100k"
+    networks:
+      - backend_whisper
+      - traefik_net
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_net
+      - traefik.http.routers.postgres_admin.rule=Host("db.${DOMAIN}")
+      - traefik.http.routers.postgres_admin.tls=true
+      - traefik.http.routers.pgadmin.entrypoints=https
+      - traefik.http.routers.pgadmin.tls.certresolver=http
+      - traefik.http.services.pgadmin.loadbalancer.server.port=80

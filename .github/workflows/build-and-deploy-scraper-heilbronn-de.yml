@@ -1,0 +1,16 @@
+name: Build and Deploy ScraperHeilbronnDe
+run-name: Build and Deploy ScraperHeilbronnDe
+on:
+  push:
+    paths:
+      - scrapers/heilbronn-de/**
+      - .github/workflows/build-and-deploy-scraper-heilbronn-de.yml
+
+jobs:
+  BuildWhisperCoreDocker:
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Start containers
+        run: docker-compose -f "scrapers/heilbronn-de/docker-compose.yml" --env-file "/data/eventwhisper/scraper-heilbronn-de.env" up -d --build 

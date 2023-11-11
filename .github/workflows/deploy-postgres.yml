@@ -1,0 +1,16 @@
+name: Build and Deploy Postgres
+run-name: Build and Deploy Postgres
+on:
+  push:
+    paths:
+      - database/**
+      - .github/workflows/deploy-postgres.yml
+
+jobs:
+  Deploy-Postgres:
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Start containers
+        run: docker-compose -f "database/docker-compose.yml" --env-file "/data/eventwhisper/postgres.env" up -d

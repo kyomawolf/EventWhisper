@@ -13,5 +13,5 @@ FROM golang:1.21.1
 
 WORKDIR /app
 COPY --from=build_go /whispercore /app/whispercore
-EXPOSE 5000
+EXPOSE 8080
 CMD [ "/app/whispercore" ]

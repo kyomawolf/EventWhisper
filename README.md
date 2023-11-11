@@ -1,6 +1,11 @@
 # EventWhisper
 
-EventWhis
+## What is EventWhisper?
+
+We collect information about Events by Scrapers and send over to the WhisperCore over REST.
+The WhisperCore matches them with the interests of Identitys and sends them through touchpoints to the users.
+Touchpoints are different messaging-apps, webfrontends or other services.
+
 
 
 ## data model for a identity
