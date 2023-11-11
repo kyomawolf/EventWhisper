@@ -24,6 +24,7 @@ services:
       MONGODB_PORT: 27017
       MONGO_CONNECTION: ${MONGO_CONNECTION}
       PORT: 8080
+      API_KEY: ${API_KEY}
     labels:
         - traefik.enable=true
         - traefik.docker.network=traefik_net
