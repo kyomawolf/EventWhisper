@@ -147,7 +147,7 @@ def send_data(data):
     }
     dump = json.dumps(local_dict)
     print(dump)
-    res = requests.post('https://api.eventwhisper.de/identity', headers={'Authorization': os.environ['WHISPER_API_TOKEN'], 'Content-Type': 'application/json'}, data=dump)
+    res = requests.post('https://api.eventwhisper.de/identity', headers={'Authorization': "Bearer " + os.environ['WHISPER_API_TOKEN'], 'Content-Type': 'application/json'}, data=dump)
     print ('response from server:', res.text)
 
 
