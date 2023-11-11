@@ -121,6 +121,8 @@ func (h *EventHandler) PostEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.Store.SaveDataToJsonFile()
+
 	json, err := json.Marshal(insertedEvent)
 	if err != nil {
 		log.Errorf("Error marshalling json: %v", err)

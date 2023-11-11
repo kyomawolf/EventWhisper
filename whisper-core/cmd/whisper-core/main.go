@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/api"
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
@@ -14,6 +15,15 @@ func main() {
 	if err != nil {
 		log.Errorf("Error loading config: %v", err)
 		os.Exit(1)
+	}
+
+	log.SetLevel(log.WarnLevel)
+
+	if strings.ToLower(config.LogLevel) == "debug" {
+		log.SetLevel(log.DebugLevel)
+	}
+	if strings.ToLower(config.LogLevel) == "info" {
+		log.SetLevel(log.InfoLevel)
 	}
 
 	server, err := api.NewServer(config)

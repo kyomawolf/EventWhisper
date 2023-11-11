@@ -57,8 +57,40 @@ func (h *IdentityHandler) GetIdentity(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *IdentityHandler) GetAllIdentities(w http.ResponseWriter, r *http.Request) {
+	log.Debug("The GetAllIdentities handler is executing!")
+
+	identities, err := h.Store.ReadAllIdentities()
+	if err != nil {
+		log.Errorf("Error getting Identities: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, e := w.Write([]byte("Internal server error"))
+		if e != nil {
+			log.Errorf("Error writing response: %v", e)
+		}
+		return
+	}
+
+	json, err := json.Marshal(identities)
+	if err != nil {
+		log.Errorf("Error marshalling json: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, e := w.Write([]byte("Internal server error"))
+		if e != nil {
+			log.Errorf("Error writing response: %v", e)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(json)
+	if err != nil {
+		log.Errorf("Error writing response: %v", err)
+	}
+}
+
 func (h *IdentityHandler) PostIdentity(w http.ResponseWriter, r *http.Request) {
-	log.Debug("The PostIdentity handler is executing!")
+	log.Info("The PostIdentity handler is executing!")
 
 	var identity Identity
 
@@ -83,6 +115,9 @@ func (h *IdentityHandler) PostIdentity(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	log.Debug("Saving data to json file")
+	h.Store.SaveDataToJsonFile()
 
 	json, err := json.Marshal(insertedIdentity)
 	if err != nil {
