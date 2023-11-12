@@ -262,7 +262,7 @@ bot.on('message', (msg) => {
         const today = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
 
         axios.post('https://api.eventwhisper.de/notify', {
-            chatId: chatId,
+            chatId: chatId.toString(),
             day: today
         }, {
             headers: {
