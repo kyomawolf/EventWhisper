@@ -3,7 +3,7 @@ run-name: Build and Deploy TouchpointTelegram
 on:
   push:
     paths:
-      - touchpoints/telegram/**
+      - touchpoints/telegram-2/**
       - .github/workflows/build-and-deploy-touchpoint-telegram.yml
 
 jobs:
