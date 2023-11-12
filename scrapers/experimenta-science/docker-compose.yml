@@ -1,0 +1,23 @@
+version: '3.8'
+
+networks:
+  traefik_net:
+    external: true
+  backend_whisper:
+    external: true
+
+services:
+  whisper_scraper_whisper_scraper_experimenta_heilbronn:
+    container_name: whisper_scraper_experimenta_heilbronn
+    build: .
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "100k"
+    environment:
+      API_KEY: ${API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    labels:
+        - traefik.enable=false
