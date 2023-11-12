@@ -106,37 +106,13 @@ def send_event(eventObject):
         print("Error creating event:", response.text)
 
 
-def load_interests(event):
-    
-    promt = "Unten findest du die Beschreibung eines Events. Sieh sie dir bitte an und versuche fünf der Interessen zuzuordnen, die deiner Meinung nach zum Event passen. Gibt mir nur die Kategorien ohne weitere Erklärung als JSON Object im Schema { 'interests': ['interest_1','interest_2'] } zurück"
-    promt += "\n\n"
-    promt  +=  "Die  Kategorien  sind: 'Technik', 'Ausstellungen', 'Konzerte', 'Theater', 'Lesungen', 'Kino und Film', 'Festivals', 'Sport', 'Outdoor', 'Spiel- und Brettspiele', 'Tanzveranstaltungen', 'Vorträge', 'Seminare', 'Workshops', 'Konferenzen', 'Charity-Events', 'Kochkurse', 'Weinproben', 'Food-Festivals', 'Gesundheitsveranstaltungen', 'Beauty-Events', 'Kinderfeste', 'Familienausflüge', 'Für Kinder', 'Sternenbeobachtung', 'Gottesdienste', 'Gebetstreffen', 'Messen', 'Kongresse', 'Startup-Events', 'Networking-Events', 'Job-Messen'"
-    # promt += "Die Kategorien sind: Ausstellungen, Konzerte, Theateraufführungen, Lesungen, Filmvorführungen, Festivals, Sportveranstaltungen, Freizeitaktivitäten, Outdoor-Aktivitäten, Spiel- und Brettspiele, Tanzveranstaltungen, Vorträge, Seminare, Workshops, Konferenzen, Bildungsreisen, Demonstrationen, Podiumsdiskussionen, Wahlkampfveranstaltungen, Charity-Events, Kochkurse, Weinproben, Food-Festivals, Gesundheitsveranstaltungen, Beauty-Events, Kinderfeste, Familienausflüge, Spiel- und Bastelnachmittage, Kindertheater, Kinderbuchlesungen, Tierschutzveranstaltungen, Tierausstellungen, Hunderennen, Reitturniere, Vogelbeobachtung, Naturwanderungen, Umweltschutzveranstaltungen, Öko-Festivals, Sternenbeobachtung, Gottesdienste, Andachten, Meditationskurse, Pilgerreisen, Gebetstreffen, Messen, Kongresse, Workshops, Produktpräsentationen, Startup-Events, Networking-Events, Konferenzen, Seminare, Messen, Job-Messen"
-    promt += "\n\n"
-    promt += "Die Beschreibung ist:\n"
-    # promt += ""
-
-    client = OpenAI()
-
-    response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
-        response_format={"type": "json_object"},
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful assistant designed to output JSON.",
-            },
-            {"role": "user", "content": promt},
-        ],
-    )
-
-    return json.loads(response.choices[0].message.content)["interests"]
-
 def fix_data(eventObject):
     promt = '''
-You are a helpful assistant designed to output JSON. You are given a JSON string representing a part of a calendar. You need to parse it into a proper format.
+You are a helpful assistant designed to output JSON. 
+You are given a JSON string representing a part of a calendar. 
+You need to parse it into a proper format.
 
-This is the desired JSON Schema:
+This is the desired output JSON Schema:
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
@@ -235,11 +211,17 @@ This is the desired JSON Schema:
   ]
 }
 
-Please try to parse the following JSON string into the desired format. 
 Pricing should be "Eintritt frei" or the actual price in euros.
-Please answer only the JSON string without any additional text.
 Please also fix html entities like &auml; or &ouml; or any other encoded or escaped characters.
+Use the description to find five interests that fit the event and add them to the interests array. Select only intrests from here 
+    interests: ["Konzerte", "Theater", "Kino", "Sport", "Ausstellungen",
+    "Familie", "Auto", "Kulinarik", "Popkultur", "Tanz",
+    "Job", "Messen", "Weiterbildung", "Sprache", "Kirche",
+    "Technik", "KI", "Programmieren", "MAKING", "Handwerk",
+    "DIY"]
 
+Please answer only the JSON string without any additional text.
+Please try to parse the following JSON string into the previous given output format. 
 
 '''
     
@@ -288,26 +270,22 @@ def main():
         url = "https://www.heilbronn.de/tourismus/veranstaltungen/veranstaltungskalender.html"
         event_urls = load_event_urls(url)
 
-        print(len(event_urls))
-
-
+        print("found " + str(len(event_urls)) + " urls in calendar")
 
         known_urls = get_known_urls()
         event_urls = list(filter(lambda url: url not in known_urls, event_urls))
 
         print("new urls: " + str(len(event_urls)))
 
+        event_urls = event_urls[:2]
 
         for event_url in event_urls:
             try:
                 print("Running for: " + event_url)
                 eventObject = get_single_event(event_url)
-                eventObject["interest"] = load_interests(eventObject)
-
                 eventObject = fix_data(eventObject)
 
                 print(json.dumps(eventObject, sort_keys=True, indent=4))
-
 
                 send_event(eventObject)
             except Exception as e:
@@ -316,6 +294,8 @@ def main():
     except Exception as e:
         print(e)
 
+    print("Done!")
+    print("Starting again in 10 minutes...")
     threading.Timer(60.0 * 10, main).start()
 
 
