@@ -32,4 +32,4 @@ services:
       - traefik.http.routers.whisper_touchpoint_telegram-secure.tls=true
       - traefik.http.routers.whisper_touchpoint_telegram-secure.tls.certresolver=http
       - traefik.http.routers.whisper_touchpoint_telegram-secure.service=whisper_touchpoint_telegram
-      - traefik.http.services.whisper_touchpoint_telegram.loadbalancer.server.port=8080
+      - traefik.http.services.whisper_touchpoint_telegram.loadbalancer.server.port=3000
