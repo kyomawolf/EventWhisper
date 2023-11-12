@@ -24,6 +24,12 @@ bot.setMyCommands([
 ])
 
 
+const basic_interests = [
+    "Konzerte", "Theater", "Kino", "Sport", "Ausstellungen",
+    "Familie", "Auto", "Kulinarik", "Popkultur", "Tanz",
+    "Job", "Messen", "Weiterbildung", "Sprache", "Kirche",
+]
+
 
 const currentFlows = []
 
@@ -98,8 +104,10 @@ const finishFlow = (chatId, msgText) => {
             { role: "system", content: "You are a helpful assistant designed to output JSON." },
             {
                 role: 'user', content: 'You are a helpful assistant designed to output JSON. \n' +
-                    'You are given a user input. It should contain some things, the user likes to do. Please create me a JSON array of strings. \n' +
-                    'Each entry should contain an single interest of the user. this is the desired JSON Schema od the output \n' +
+                    'You are given a user input. It should contain some things, the user likes to do. Please match this interests to something of the following:. \n' +
+                    basic_interests.join(", ") + '  \n' +
+                    '  \n' +
+                    'Now add me the matches to an array on put them under the key "interests" in the following JSON Schema. Return me only the generated JSON \n' +
                     '  \n' +
                     '{  \n' +
                     '    "$schema": "http://json-schema.org/draft-04/schema#",  \n' +

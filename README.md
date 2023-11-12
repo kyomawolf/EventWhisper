@@ -6,6 +6,15 @@ We collect information about Events by Scrapers and send over to the WhisperCore
 The WhisperCore matches them with the interests of Identitys and sends them through touchpoints to the users.
 Touchpoints are different messaging-apps, webfrontends or other services.
 
+## ToDo
+
+* [ ] implement OAuth2 for endpoints and identity
+* [ ] Add a mongo db for the data
+* [ ] Add WhatsApp as a touchpoint
+* [ ] Add a webfrontend as a touchpoint
+* [ ] Improve Input Validation
+
+
 
 
 ## data model for a identity
