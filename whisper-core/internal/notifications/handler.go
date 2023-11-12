@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/events"
@@ -71,7 +73,7 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	events, err := h.EventStore.ReadAllEvents()
+	eventsSlice, err := h.EventStore.ReadAllEvents()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
@@ -82,9 +84,52 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 	}
 
 	log.Debugf("Found %v identities", len(identities))
-	log.Debugf("Found %v events", len(events))
+	log.Debugf("Found %v events", len(eventsSlice))
 
 	for _, identity := range identities {
+
+		eventsByMatches := [][]string{}
+
+		for _, e := range eventsSlice {
+			matches := 0
+
+			for _, ii := range identity.Interests {
+				for _, ei := range e.Interests {
+					if strings.ToLower(ei) == strings.ToLower(ii) {
+						matches++
+					}
+				}
+			}
+
+			if (len(eventsByMatches)) <= matches {
+				for len(eventsByMatches) <= matches {
+					eventsByMatches = append(eventsByMatches, []string{})
+				}
+			}
+
+			eventsByMatches[matches] = append(eventsByMatches[matches], e.ID)
+		}
+
+		var selected []events.Event
+
+		slices.Reverse(eventsByMatches)
+		for i, eventIds := range eventsByMatches {
+			log.Debugf("Found %v events with %v matches", len(eventIds), len(eventsByMatches)-i)
+
+			for _, eventId := range eventIds {
+
+				log.Debugf("Selected event %v", eventId)
+				log.Debugf("len(selected) %v", len(selected))
+
+				if len(selected) < 3 {
+					for _, e := range eventsSlice {
+						if e.ID == eventId {
+							selected = append(selected, e)
+						}
+					}
+				}
+			}
+		}
 
 		log.Debugf("Sending notification to %v", identity.Name)
 		log.Debugf("Interests: %v", identity.Interests)
@@ -93,7 +138,7 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 		msg += "Wir haben ein paar spannende Events für dich. Eventuell ist ja etwas dabei, worauf du Lust hast."
 		h.SendMsg(identity, msg)
 
-		for _, event := range events {
+		for _, event := range selected {
 			msgEvent := event.Title + "\n"
 			msgEvent += "am " + event.StartTime + "\n\n"
 			msgEvent += event.Description + "\n\n"
@@ -101,7 +146,7 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 
 			log.Debugf("Sending event %v", event.Title)
 			h.SendMsg(identity, msgEvent)
-		}
 
+		}
 	}
 }
