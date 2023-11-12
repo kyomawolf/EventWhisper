@@ -46,19 +46,19 @@ func TestFind(t *testing.T) {
 	}
 
 	identity := identities.Identity{
-		Interest: []string{
+		Interests: []string{
 			"foo",
 			"bar",
 		},
 	}
 
-	matches, _ := store.CreateMatches(events[0], identity.Interest)
+	matches, _ := store.CreateMatches(events[0], identity.Interests)
 	assert.Equal(t, matches, 2)
 
-	matches2, _ := store.CreateMatches(events[1], identity.Interest)
+	matches2, _ := store.CreateMatches(events[1], identity.Interests)
 	assert.Equal(t, matches2, 1)
 
-	matches3, _ := store.CreateMatches(events[2], identity.Interest)
+	matches3, _ := store.CreateMatches(events[2], identity.Interests)
 	assert.Equal(t, matches3, 2)
 }
 
@@ -100,12 +100,12 @@ func TestFindOrdered(t *testing.T) {
 	}
 
 	identity := identities.Identity{
-		Interest: []string{
+		Interests: []string{
 			"foo",
 			"bar",
 		},
 	}
 
-	ordered, _ := store.FindBestMatches(identity.Interest)
+	ordered, _ := store.FindBestMatches(identity.Interests)
 	assert.Equal(t, ordered[0].ID, "2")
 }

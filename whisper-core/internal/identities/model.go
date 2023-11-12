@@ -4,7 +4,7 @@ type Identity struct {
 	Sub             string           `json:"sub"`
 	Name            string           `json:"name"`
 	Location        string           `json:"location"`
-	Interest        []string         `json:"interest"`
+	Interests       []string         `json:"interests"`
 	Channels        []Channel        `json:"channels"`
 	AnnouncedEvents []AnnouncedEvent `json:"announcedEvents"`
 }
