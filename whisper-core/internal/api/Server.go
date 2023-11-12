@@ -10,6 +10,7 @@ import (
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/events"
 	"github.com/kyomawolf/EventWhisper/whisper-core/internal/identities"
+	"github.com/kyomawolf/EventWhisper/whisper-core/internal/notifications"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 )
@@ -19,6 +20,7 @@ type Server struct {
 	Router          *negroni.Negroni
 	IdentityHandler *identities.IdentityHandler
 	EventHandler    *events.EventHandler
+	NotifyHandler   *notifications.NotificationHandler
 }
 
 func NewServer(config *configuration.Config) (*Server, error) {
@@ -38,6 +40,7 @@ func NewServer(config *configuration.Config) (*Server, error) {
 		Router:          nil,
 		IdentityHandler: identities.NewIdentityHandler(config, identityStore),
 		EventHandler:    events.NewEventHandler(config, eventsStore),
+		NotifyHandler:   notifications.NewNotificationHandler(config, eventsStore, identityStore),
 	}, nil
 }
 
@@ -55,6 +58,9 @@ func (s *Server) ConfigureRouter() error {
 	router.Path(fmt.Sprintf("%v/events", s.Config.BasePath)).HandlerFunc(s.EventHandler.GetAllEvents).Methods("GET")
 	router.Path(fmt.Sprintf("%v/events/{eventid}", s.Config.BasePath)).HandlerFunc(options).Methods("OPTIONS")
 	router.Path(fmt.Sprintf("%v/events/{eventid}", s.Config.BasePath)).HandlerFunc(s.EventHandler.GetEvent).Methods("GET")
+
+	router.Path(fmt.Sprintf("%v/notify", s.Config.BasePath)).HandlerFunc(options).Methods("OPTIONS")
+	router.Path(fmt.Sprintf("%v/notify", s.Config.BasePath)).HandlerFunc(s.NotifyHandler.GetNotification).Methods("GET")
 
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 

@@ -10,7 +10,7 @@ type Event struct {
 	Organizer   string        `json:"organizer"`
 	Pricing     string        `json:"pricing"`
 	Url         string        `json:"url"`
-	Interest    []string      `json:"interests"`
+	Interests   []string      `json:"interests"`
 }
 
 type EventLocation struct {

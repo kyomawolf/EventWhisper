@@ -2,7 +2,6 @@ package events
 
 import (
 	"os"
-	"sort"
 
 	"encoding/json"
 	"io/ioutil"
@@ -17,10 +16,28 @@ type EventStore struct {
 }
 
 func NewEventStore(config *configuration.Config) (*EventStore, error) {
-	return &EventStore{
+	store := &EventStore{
 		Config: config,
 		Events: []Event{},
-	}, nil
+	}
+
+	path := config.DBFilePath + "/events.json"
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// File does not exist, return empty store
+			return store, nil
+		}
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, &store.Events)
+	if err != nil {
+		return nil, err
+	}
+
+	return store, nil
+
 }
 
 type EventInsertError string
@@ -85,43 +102,4 @@ func (s *EventStore) ReadEvent(id string) (*Event, error) {
 type EventMatches struct {
 	Event      Event
 	MatchCount int
-}
-
-func (s *EventStore) CreateMatches(event Event, interests []string) (int, error) {
-	matches := 0
-
-	for _, i := range interests {
-		for _, e := range event.Interest {
-			if e == i {
-				matches++
-			}
-		}
-	}
-
-	return matches, nil
-}
-
-func (s *EventStore) FindBestMatches(interests []string) ([]Event, error) {
-
-	var bestMatches []EventMatches
-
-	for _, e := range s.Events {
-		matchCount, err := s.CreateMatches(e, interests)
-		if err != nil {
-			return nil, err
-		}
-
-		match := EventMatches{
-			Event:      e,
-			MatchCount: matchCount,
-		}
-
-		bestMatches = append(bestMatches, match)
-	}
-
-	sort.Slice(bestMatches, func(i, j int) bool {
-		return bestMatches[i].MatchCount > bestMatches[j].MatchCount
-	})
-
-	return []Event{bestMatches[0].Event, bestMatches[1].Event, bestMatches[2].Event}, nil
 }
