@@ -61,6 +61,7 @@ func (s *Server) ConfigureRouter() error {
 
 	router.Path(fmt.Sprintf("%v/notify", s.Config.BasePath)).HandlerFunc(options).Methods("OPTIONS")
 	router.Path(fmt.Sprintf("%v/notify", s.Config.BasePath)).HandlerFunc(s.NotifyHandler.GetNotification).Methods("GET")
+	router.Path(fmt.Sprintf("%v/notify", s.Config.BasePath)).HandlerFunc(s.NotifyHandler.PostNotification).Methods("POST")
 
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 

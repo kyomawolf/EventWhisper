@@ -91,3 +91,13 @@ func (s *IdentityStore) GetIdentity(ctx context.Context, sub string) (*Identity,
 func (s *IdentityStore) ReadAllIdentities() ([]Identity, error) {
 	return s.Identities, nil
 }
+
+func (s *IdentityStore) ReadIdentityByChatId(chatId string) (*Identity, error) {
+	for _, m := range s.Identities {
+		if m.Channels[0].Specifics.ChatID == chatId {
+			return &m, nil
+		}
+	}
+
+	return nil, nil
+}

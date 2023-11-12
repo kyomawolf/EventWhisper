@@ -150,3 +150,57 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 		}
 	}
 }
+
+type RequestEventNotificationModel struct {
+	ChatId string `json:"chatId"`
+	Day    string `json:"day"`
+}
+
+func (h *NotificationHandler) PostNotification(w http.ResponseWriter, r *http.Request) {
+	log.Debug("Running PostNotification")
+
+	var renModel RequestEventNotificationModel
+
+	err := json.NewDecoder(r.Body).Decode(&renModel)
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		_, e := w.Write([]byte("Bad request"))
+		if e != nil {
+			return
+		}
+		return
+	}
+
+	log.Debugf("ChatId: %v", renModel.ChatId)
+	log.Debugf("Day: %v", renModel.Day)
+
+	identity, err := h.IdentityStore.ReadIdentityByChatId(renModel.ChatId)
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, e := w.Write([]byte("Internal server error"))
+		if e != nil {
+			return
+		}
+		return
+	}
+
+	// eventsSlice, err := h.EventStore.ReadAllEvents()
+
+	msg := "hi " + identity.Name + ",\n"
+	msg += "schön von die zu hören. Hier sind die Events für den " + renModel.Day + ":\n\n"
+
+	// for _, event := range eventsSlice {
+
+	// 	if  event.StartTime == renModel.Day {
+	// 		msg += event.Title + "\n"
+	// 		msg += "am " + event.StartTime + "\n\n"
+	// 		msg += event.Url + "\n\n"
+
+	// 		log.Debugf("Sending event %v", event.Title)
+	// 	}
+	// }
+
+	h.SendMsg(*identity, msg)
+}

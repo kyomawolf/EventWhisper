@@ -239,12 +239,46 @@ bot.on('message', (msg) => {
     if (messageText == "/start" || currentFlows.find((flow) => flow.chatId == chatId) != null) {
         initialFlow(chatId, messageText);
     }
+    else if (messageText == "/heute") {
+        const now = new Date();
+        const today = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+
+        axios.post('https://api.eventwhisper.de/notify', {
+            chatId: chatId,
+            day: today
+        }, {
+            headers: {
+                Authorization: 'Bearer ' + config.whisper_api_key,
+            }
+        }).then((response) => {
+            console.log(response.data);
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
+    else if (messageText == "/morgen") {
+        const now = new Date();
+        now.setDate(now.getDate() + 1);
+        const today = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+
+        axios.post('https://api.eventwhisper.de/notify', {
+            chatId: chatId,
+            day: today
+        }, {
+            headers: {
+                Authorization: 'Bearer ' + config.whisper_api_key,
+            }
+        }).then((response) => {
+            console.log(response.data);
+        }).catch((error) => {
+            console.error(error);
+        });
+    }
     else {
         bot.sendMessage(chatId, 'Es freut mich immer von die zu hören. Wenn du Events vorgeschlagen bekommen willst, kannst du mit /heute oder /morgen Events abfragen');
     }
 
 });
-
 
 // SERVER STUFF BELOW
 
