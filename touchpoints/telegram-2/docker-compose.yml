@@ -1,0 +1,35 @@
+version: '3.7'
+
+networks:
+  backend_whisper:
+    external: true
+  traefik_net:
+    external: true
+
+services:
+  touchpoint-telegram:
+    build: .
+    container_name: touchpoint-telegram
+
+    networks:
+      - backend_whisper
+      - traefik_net
+
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - WHISPER_API_TOKEN=${WHISPER_API_TOKEN}
+      - TELEGRAM_API_TOKEN=${TELEGRAM_API_TOKEN}
+
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik_net
+      - traefik.http.routers.whisper_touchpoint_telegram.entrypoints=http
+      - traefik.http.routers.whisper_touchpoint_telegram.rule=(Host(`touchpoints.eventwhisper.de`)  && Path("/telegram{regex:$$|/.*}"))
+      - traefik.http.middlewares.whisper_touchpoint_telegram-https-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.whisper_touchpoint_telegram.middlewares=whisper_touchpoint_telegram-https-redirect
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.entrypoints=https
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.rule=(Host(`touchpoints.eventwhisper.de`)  && Path("/telegram{regex:$$|/.*}"))
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.tls=true
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.tls.certresolver=http
+      - traefik.http.routers.whisper_touchpoint_telegram-secure.service=whisper_touchpoint_telegram
+      - traefik.http.services.whisper_touchpoint_telegram.loadbalancer.server.port=8080

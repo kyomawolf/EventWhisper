@@ -13,4 +13,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Start containers
-        run: docker-compose -f "touchpoints/telegram/docker-compose.yml" --env-file "/data/eventwhisper/touchpoint-telegram.env" up -d --build
+        run: docker-compose -f "touchpoints-2/telegram/docker-compose.yml" --env-file "/data/eventwhisper/touchpoint-telegram.env" up -d --build
