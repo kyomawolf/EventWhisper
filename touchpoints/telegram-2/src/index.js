@@ -178,6 +178,8 @@ const finishFlow = (chatId, msgText) => {
                 }
             }).then((response) => {
                 console.log(response.data);
+
+                currentFlows.splice(currentFlows.indexOf(flow), 1);
             }).catch((error) => {
                 console.error(error);
             });
