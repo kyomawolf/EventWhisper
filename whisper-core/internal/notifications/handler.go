@@ -186,21 +186,20 @@ func (h *NotificationHandler) PostNotification(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	// eventsSlice, err := h.EventStore.ReadAllEvents()
-
 	msg := "hi " + identity.Name + ",\n"
 	msg += "schön von die zu hören. Hier sind die Events für den " + renModel.Day + ":\n\n"
 
-	// for _, event := range eventsSlice {
+	eventsSlice, err := h.EventStore.ReadAllEvents()
+	for _, event := range eventsSlice {
 
-	// 	if  event.StartTime == renModel.Day {
-	// 		msg += event.Title + "\n"
-	// 		msg += "am " + event.StartTime + "\n\n"
-	// 		msg += event.Url + "\n\n"
+		if strings.Contains(event.StartTime, renModel.Day) {
+			msg += event.Title + "\n"
+			msg += "am " + event.StartTime + "\n\n"
+			msg += event.Url + "\n\n"
 
-	// 		log.Debugf("Sending event %v", event.Title)
-	// 	}
-	// }
+			log.Debugf("Sending event %v", event.Title)
+		}
+	}
 
 	h.SendMsg(*identity, msg)
 }
