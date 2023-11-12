@@ -139,55 +139,61 @@ const finishFlow = (chatId, msgText) => {
     }).then((response) => {
         console.log("response data: ", response.choices[0].message.content);
 
-        jsonStr = JSON.parse(response.choices[0].message.content);
-        console.log("json: ", jsonStr.interests);
+        try {
+            jsonStr = JSON.parse(response.choices[0].message.content);
+            console.log("json: ", jsonStr.interests);
 
-        flow = currentFlows.find((flow) => flow.chatId === chatId);
+            flow = currentFlows.find((flow) => flow.chatId === chatId);
 
-        jsonStr.interests.forEach((interest) => {
-            flow.data.interests.push(interest);
-        });
+            jsonStr.interests.forEach((interest) => {
+                flow.data.interests.push(interest);
+            });
 
-        if (flow.data.interests.length < 3) {
-            bot.sendMessage(chatId, 'Ok, das ist ein guter Anfang. Was interessiert dich noch?').then((msg) => {
+            if (flow.data.interests.length < 3) {
+                bot.sendMessage(chatId, 'Ok, das ist ein guter Anfang. Was interessiert dich noch?').then((msg) => {
+                    return;
+                });
+
+                return;
+            }
+
+            bot.sendMessage(chatId, 'Vielen Dank. Da hast du aber ein paar spannende Dinge. Ich glaube da finde ich gute Events. Ich sende dir immer mal wieder Nachrichten mit atuellen Veranstaltungen in der Region. Außerdem kannst du mit /heute und /morgen auch mal spontan etwas unternehmen.').then((msg) => {
+                flow = currentFlows.find((flow) => flow.chatId === chatId)
+                flow.state = FlowState.Finished;
+
+                axios.post('https://api.eventwhisper.de/identity', {
+                    sub: "",
+                    name: flow.data.name,
+                    interests: flow.data.interests,
+                    location: flow.data.zip,
+                    channels: [{
+                        id: uuid.v4(),
+                        channelname: "telegram",
+                        type: "directmessage",
+                        specifics: {
+                            chatId: chatId.toString()
+                        }
+                    }],
+                    announcedEvents: []
+                }, {
+                    headers: {
+                        Authorization: 'Bearer ' + config.whisper_api_key,
+                    }
+                }).then((response) => {
+                    console.log(response.data);
+
+                    currentFlows.splice(currentFlows.indexOf(flow), 1);
+                }).catch((error) => {
+                    console.error(error);
+                });
+            });
+
+        } catch (error) {
+            console.log("error: ", error);
+            bot.sendMessage(chatId, 'Das habe ich leider nicht verstanden. Kannst du es noch einmal versuchen?').then((msg) => {
                 return;
             });
-
-            return;
         }
-
-        bot.sendMessage(chatId, 'Vielen Dank. Da hast du aber ein paar spannende Dinge. Ich glaube da finde ich gute Events. Ich sende dir immer mal wieder Nachrichten mit atuellen Veranstaltungen in der Region. Außerdem kannst du mit /heute und /morgen auch mal spontan etwas unternehmen.').then((msg) => {
-            flow = currentFlows.find((flow) => flow.chatId === chatId)
-            flow.state = FlowState.Finished;
-
-            axios.post('https://api.eventwhisper.de/identity', {
-                sub: "",
-                name: flow.data.name,
-                interests: flow.data.interests,
-                location: flow.data.zip,
-                channels: [{
-                    id: uuid.v4(),
-                    channelname: "telegram",
-                    type: "directmessage",
-                    specifics: {
-                        chatId: chatId.toString()
-                    }
-                }],
-                announcedEvents: []
-            }, {
-                headers: {
-                    Authorization: 'Bearer ' + config.whisper_api_key,
-                }
-            }).then((response) => {
-                console.log(response.data);
-
-                currentFlows.splice(currentFlows.indexOf(flow), 1);
-            }).catch((error) => {
-                console.error(error);
-            });
-
-
-        });
     });
 }
 
