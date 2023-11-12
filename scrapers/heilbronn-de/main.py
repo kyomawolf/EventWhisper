@@ -277,7 +277,7 @@ def main():
 
         print("new urls: " + str(len(event_urls)))
 
-        event_urls = event_urls[:2]
+        # event_urls = event_urls[:2]
 
         for event_url in event_urls:
             try:
