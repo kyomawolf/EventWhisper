@@ -28,6 +28,8 @@ const basic_interests = [
     "Konzerte", "Theater", "Kino", "Sport", "Ausstellungen",
     "Familie", "Auto", "Kulinarik", "Popkultur", "Tanz",
     "Job", "Messen", "Weiterbildung", "Sprache", "Kirche",
+    "Technik", "KI", "Programmieren", "MAKING", "Handwerk",
+    "DIY",
 ]
 
 
