@@ -3,14 +3,14 @@ package notifications
 import (
 	"bytes"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"slices"
 	"strings"
 
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/events"
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/identities"
-	log "github.com/sirupsen/logrus"
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/configuration"
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/events"
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/identities"
 )
 
 type NotificationHandler struct {
@@ -61,7 +61,8 @@ func (h *NotificationHandler) SendMsg(identity identities.Identity, msg string) 
 }
 
 func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Request) {
-	log.Debug("Running GetNotification")
+	ctx := r.Context()
+	slog.DebugContext(ctx, "Running GetNotification")
 
 	identities, err := h.IdentityStore.ReadAllIdentities()
 	if err != nil {
@@ -83,8 +84,8 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	log.Debugf("Found %v identities", len(identities))
-	log.Debugf("Found %v events", len(eventsSlice))
+	slog.DebugContext(ctx, "Found identities", "count", len(identities))
+	slog.DebugContext(ctx, "Found events", "count", len(eventsSlice))
 
 	for _, identity := range identities {
 
@@ -114,12 +115,12 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 
 		slices.Reverse(eventsByMatches)
 		for i, eventIds := range eventsByMatches {
-			log.Debugf("Found %v events with %v matches", len(eventIds), len(eventsByMatches)-i)
+			slog.DebugContext(ctx, "Found events with matches", "count evetns", len(eventIds), "count matches", len(eventsByMatches)-i)
 
 			for _, eventId := range eventIds {
 
-				log.Debugf("Selected event %v", eventId)
-				log.Debugf("len(selected) %v", len(selected))
+				slog.DebugContext(ctx, "Selected event", "event", eventId)
+				slog.DebugContext(ctx, "len(selected)", "value", len(selected))
 
 				if len(selected) < 3 {
 					for _, e := range eventsSlice {
@@ -131,8 +132,8 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 			}
 		}
 
-		log.Debugf("Sending notification to %v", identity.Name)
-		log.Debugf("Interests: %v", identity.Interests)
+		slog.DebugContext(ctx, "Sending notification", "to", identity.Name)
+		slog.DebugContext(ctx, "Interests", "value", identity.Interests)
 
 		msg := "Hello " + identity.Name + ",\n"
 		msg += "Wir haben ein paar spannende Events für dich. Eventuell ist ja etwas dabei, worauf du Lust hast."
@@ -144,9 +145,8 @@ func (h *NotificationHandler) GetNotification(w http.ResponseWriter, r *http.Req
 			msgEvent += event.Description + "\n\n"
 			msgEvent += event.Url + "\n"
 
-			log.Debugf("Sending event %v", event.Title)
+			slog.DebugContext(ctx, "Sending event", "value", event.Title)
 			h.SendMsg(identity, msgEvent)
-
 		}
 	}
 }
@@ -157,13 +157,14 @@ type RequestEventNotificationModel struct {
 }
 
 func (h *NotificationHandler) PostNotification(w http.ResponseWriter, r *http.Request) {
-	log.Debug("Running PostNotification")
+	ctx := r.Context()
+	slog.Debug("Running PostNotification")
 
 	var renModel RequestEventNotificationModel
 
 	err := json.NewDecoder(r.Body).Decode(&renModel)
 	if err != nil {
-		log.Error(err)
+		slog.ErrorContext(ctx, "Error decoding json", "error", err)
 		w.WriteHeader(http.StatusBadRequest)
 		_, e := w.Write([]byte("Bad request"))
 		if e != nil {
@@ -172,12 +173,12 @@ func (h *NotificationHandler) PostNotification(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	log.Debugf("ChatId: %v", renModel.ChatId)
-	log.Debugf("Day: %v", renModel.Day)
+	slog.DebugContext(ctx, "Selected chat", "chat", renModel.ChatId)
+	slog.DebugContext(ctx, "Selected day", "day", renModel.Day)
 
 	identity, err := h.IdentityStore.ReadIdentityByChatId(renModel.ChatId)
 	if err != nil {
-		log.Error(err)
+		slog.ErrorContext(ctx, "Error getting identity", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
@@ -197,7 +198,7 @@ func (h *NotificationHandler) PostNotification(w http.ResponseWriter, r *http.Re
 			msg += "am " + event.StartTime + "\n\n"
 			msg += event.Url + "\n\n"
 
-			log.Debugf("Sending event %v", event.Title)
+			slog.DebugContext(ctx, "Sending event", "title", event.Title)
 		}
 	}
 

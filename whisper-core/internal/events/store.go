@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/configuration"
 	"github.com/google/uuid"
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
 )
 
 type EventStore struct {

@@ -2,8 +2,10 @@ package configuration
 
 import (
 	"errors"
+	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Config struct {
@@ -46,4 +48,20 @@ func LoadConfig() (*Config, error) {
 		ApiKey:       getenvStr("API_KEY", "CHANGEME"),
 		DBFilePath:   "_data",
 	}, nil
+}
+
+func GetSlogLevel(logLevel string) slog.Level {
+	if strings.EqualFold(logLevel, "info") {
+		return slog.LevelInfo
+	}
+
+	if strings.EqualFold(logLevel, "warning") {
+		return slog.LevelWarn
+	}
+
+	if strings.EqualFold(logLevel, "error") {
+		return slog.LevelError
+	}
+
+	return slog.LevelDebug
 }

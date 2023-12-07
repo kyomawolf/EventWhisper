@@ -1,46 +1,40 @@
 package main
 
 import (
+	"log/slog"
 	"os"
-	"strings"
 
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/api"
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
-	log "github.com/sirupsen/logrus"
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/api"
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/configuration"
 )
 
 func main() {
 
+	logOpts := slog.HandlerOptions{
+		Level: configuration.GetSlogLevel(os.Getenv("LOG_LEVEL")),
+	}
+
+	textHandler := slog.NewTextHandler(os.Stdout, &logOpts)
+	logger := slog.New(textHandler)
+	slog.SetDefault(logger)
+
+	slog.Info("Starting EventWhisper")
+
 	config, err := configuration.LoadConfig()
 	if err != nil {
-		log.Errorf("Error loading config: %v", err)
+		slog.Error("Error loading config", "error", err)
 		os.Exit(1)
-	}
-
-	log.SetLevel(log.WarnLevel)
-
-	if strings.ToLower(config.LogLevel) == "debug" {
-		log.SetLevel(log.DebugLevel)
-	}
-	if strings.ToLower(config.LogLevel) == "info" {
-		log.SetLevel(log.InfoLevel)
 	}
 
 	server, err := api.NewServer(config)
 	if err != nil {
-		log.Errorf("Error creating server: %v", err)
-		os.Exit(1)
-	}
-
-	err = server.ConfigureRouter()
-	if err != nil {
-		log.Errorf("Error configuring router: %v", err)
+		slog.Error("Error creating server", "error", err)
 		os.Exit(1)
 	}
 
 	err = server.Start()
 	if err != nil {
-		log.Errorf("Error starting server: %v", err)
+		slog.Error("Error starting server", "error", err)
 		os.Exit(1)
 	}
 

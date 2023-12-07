@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"log/slog"
 
 	"os"
 
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/configuration"
 	"github.com/google/uuid"
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
-	log "github.com/sirupsen/logrus"
 )
 
 type IdentityStore struct {
@@ -18,7 +18,7 @@ type IdentityStore struct {
 }
 
 func NewIdentityStore(config *configuration.Config) (*IdentityStore, error) {
-	log.Info("Creating Identity store")
+	slog.Info("Creating Identity store")
 
 	store := &IdentityStore{
 		Config:     config,
@@ -52,7 +52,7 @@ func (s *IdentityStore) SaveDataToJsonFile() error {
 		return err
 	}
 
-	log.Debug(path)
+	slog.Debug(path)
 
 	jsonData, err := json.Marshal(s.Identities)
 	if err != nil {

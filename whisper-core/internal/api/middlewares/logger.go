@@ -1,37 +1,30 @@
 package middlewares
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
-	log "github.com/sirupsen/logrus"
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/configuration"
 )
 
-type LoggerMiddleware struct {
-	Config *configuration.Config
-}
+func Logger(config *configuration.Config) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			slog.DebugContext(r.Context(), "The logger middleware is executing!")
 
-func NewLoggerMiddleware(config *configuration.Config) *LoggerMiddleware {
-	return &LoggerMiddleware{
-		Config: config,
-	}
-}
-
-func (m *LoggerMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	log.Debug("The logger middleware is executing!")
-
-	log.Debugf("LogLevel: %v", m.Config.LogLevel)
-	if strings.ToLower(m.Config.LogLevel) == "debug" {
-		for name, values := range r.Header {
-			for _, value := range values {
-				log.Debugf("%v : %v", name, value)
+			if strings.ToLower(config.LogLevel) == "debug" {
+				for name, values := range r.Header {
+					for _, value := range values {
+						slog.DebugContext(r.Context(), "HEADERS", "name", name, "value", value)
+					}
+				}
 			}
-		}
-	}
 
-	t := time.Now()
-	next.ServeHTTP(w, r)
-	log.Debugf("Execution time: %s ", time.Since(t).String())
+			t := time.Now()
+			next.ServeHTTP(w, r)
+			slog.DebugContext(r.Context(), "Execution time", "time", time.Since(t).String())
+		})
+	}
 }

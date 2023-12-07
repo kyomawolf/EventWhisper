@@ -2,11 +2,11 @@ package events
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/configuration"
 	"github.com/gorilla/mux"
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
-	log "github.com/sirupsen/logrus"
 )
 
 type EventHandler struct {
@@ -24,22 +24,22 @@ func NewEventHandler(config *configuration.Config, store *EventStore) *EventHand
 func (h *EventHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
 	events, err := h.Store.ReadAllEvents()
 	if err != nil {
-		log.Errorf("Error getting events: %v", err)
+		slog.ErrorContext(r.Context(), "Error getting events", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
 
 	json, err := json.Marshal(events)
 	if err != nil {
-		log.Errorf("Error marshalling json: %v", err)
+		slog.ErrorContext(r.Context(), "Error marshalling json", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
@@ -47,34 +47,34 @@ func (h *EventHandler) GetAllEvents(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(json)
 	if err != nil {
-		log.Errorf("Error writing response: %v", err)
+		slog.ErrorContext(r.Context(), "Error writing response", "error", err)
 	}
 }
 
 func (h *EventHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
-	log.Debug("The GetEvent handler is executing!")
+	slog.DebugContext(r.Context(), "The GetEvent handler is executing!")
 
 	vars := mux.Vars(r)
 	eventId := vars["eventid"]
 
 	event, err := h.Store.ReadEvent(eventId)
 	if err != nil {
-		log.Errorf("Error getting Event: %v", err)
+		slog.ErrorContext(r.Context(), "Error getting Event", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
 
 	json, err := json.Marshal(event)
 	if err != nil {
-		log.Errorf("Error marshalling json: %v", err)
+		slog.ErrorContext(r.Context(), "Error marshalling json", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
@@ -82,41 +82,41 @@ func (h *EventHandler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(json)
 	if err != nil {
-		log.Errorf("Error writing response: %v", err)
+		slog.ErrorContext(r.Context(), "Error writing response", "error", err)
 	}
 }
 
 func (h *EventHandler) PostEvent(w http.ResponseWriter, r *http.Request) {
-	log.Debug("The PostEvent handler is executing!")
+	slog.DebugContext(r.Context(), "The PostEvent handler is executing!")
 
 	var event Event
 	err := json.NewDecoder(r.Body).Decode(&event)
 	if err != nil {
-		log.Errorf("Error decoding json: %v", err)
+		slog.ErrorContext(r.Context(), "Error decoding json", "error", err)
 		w.WriteHeader(http.StatusBadRequest)
 		_, e := w.Write([]byte("Bad request"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
 
 	insertedEvent, errInsert := h.Store.InsertEvent(event)
 	if errInsert == &ErrEventAlreadyExists {
-		log.Errorf("Error inserting Event: %v", err)
+		slog.ErrorContext(r.Context(), "Error inserting Event", "error", err)
 		w.WriteHeader(http.StatusConflict)
 		_, e := w.Write([]byte("Event already exists"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
 	if errInsert != nil {
-		log.Errorf("Error inserting Event: %v", err)
+		slog.ErrorContext(r.Context(), "Error inserting Event", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
@@ -125,11 +125,11 @@ func (h *EventHandler) PostEvent(w http.ResponseWriter, r *http.Request) {
 
 	json, err := json.Marshal(insertedEvent)
 	if err != nil {
-		log.Errorf("Error marshalling json: %v", err)
+		slog.ErrorContext(r.Context(), "Error marshalling json", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(r.Context(), "Error writing response", "error", e)
 		}
 		return
 	}
@@ -137,6 +137,6 @@ func (h *EventHandler) PostEvent(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(json)
 	if err != nil {
-		log.Errorf("Error writing response: %v", err)
+		slog.ErrorContext(r.Context(), "Error writing response", "error", err)
 	}
 }

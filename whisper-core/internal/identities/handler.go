@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"github.com/kyomawolf/EventWhisper/whisper-core/internal/configuration"
+	"log/slog"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/EventWhisper/EventWhisper/whisper-core/internal/configuration"
+	"github.com/gorilla/mux"
 )
 
 type IdentityHandler struct {
@@ -23,29 +23,30 @@ func NewIdentityHandler(config *configuration.Config, store *IdentityStore) *Ide
 }
 
 func (h *IdentityHandler) GetIdentity(w http.ResponseWriter, r *http.Request) {
-	log.Debug("The GetIdentity handler is executing!")
+	ctx := r.Context()
+	slog.ErrorContext(ctx, "The GetIdentity handler is executing!")
 
 	vars := mux.Vars(r)
 	sub := vars["sub"]
 
-	identity, err := h.Store.GetIdentity(r.Context(), sub)
+	identity, err := h.Store.GetIdentity(ctx, sub)
 	if err != nil {
-		log.Errorf("Error getting Identity: %v", err)
+		slog.ErrorContext(ctx, "Error getting Identity: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(ctx, "Error writing response: %v", e)
 		}
 		return
 	}
 
 	json, err := json.Marshal(identity)
 	if err != nil {
-		log.Errorf("Error marshalling json: %v", err)
+		slog.ErrorContext(ctx, "Error marshalling json: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(ctx, "Error writing response: %v", e)
 		}
 		return
 	}
@@ -53,31 +54,32 @@ func (h *IdentityHandler) GetIdentity(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(json)
 	if err != nil {
-		log.Errorf("Error writing response: %v", err)
+		slog.ErrorContext(ctx, "Error writing response: %v", err)
 	}
 }
 
 func (h *IdentityHandler) GetAllIdentities(w http.ResponseWriter, r *http.Request) {
-	log.Debug("The GetAllIdentities handler is executing!")
+	ctx := r.Context()
+	slog.ErrorContext(ctx, "The GetAllIdentities handler is executing!")
 
 	identities, err := h.Store.ReadAllIdentities()
 	if err != nil {
-		log.Errorf("Error getting Identities: %v", err)
+		slog.ErrorContext(ctx, "Error getting Identities: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(ctx, "Error writing response: %v", e)
 		}
 		return
 	}
 
 	json, err := json.Marshal(identities)
 	if err != nil {
-		log.Errorf("Error marshalling json: %v", err)
+		slog.ErrorContext(ctx, "Error marshalling json: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(ctx, "Error writing response: %v", e)
 		}
 		return
 	}
@@ -85,47 +87,48 @@ func (h *IdentityHandler) GetAllIdentities(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(json)
 	if err != nil {
-		log.Errorf("Error writing response: %v", err)
+		slog.ErrorContext(ctx, "Error writing response: %v", err)
 	}
 }
 
 func (h *IdentityHandler) PostIdentity(w http.ResponseWriter, r *http.Request) {
-	log.Info("The PostIdentity handler is executing!")
+	ctx := r.Context()
+	slog.InfoContext(ctx, "The PostIdentity handler is executing!")
 
 	var identity Identity
 
 	err := json.NewDecoder(r.Body).Decode(&identity)
 	if err != nil {
-		log.Errorf("Error decoding json: %v", err)
+		slog.ErrorContext(ctx, "Error decoding json: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		_, e := w.Write([]byte("Bad request"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(ctx, "Error writing response: %v", e)
 		}
 		return
 	}
 
-	insertedIdentity, err := h.Store.InsertIdentity(r.Context(), identity)
+	insertedIdentity, err := h.Store.InsertIdentity(ctx, identity)
 	if err != nil {
-		log.Errorf("Error inserting Identity: %v", err)
+		slog.ErrorContext(ctx, "Error inserting Identity: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(ctx, "Error writing response: %v", e)
 		}
 		return
 	}
 
-	log.Debug("Saving data to json file")
+	slog.ErrorContext(ctx, "Saving data to json file")
 	h.Store.SaveDataToJsonFile()
 
 	json, err := json.Marshal(insertedIdentity)
 	if err != nil {
-		log.Errorf("Error marshalling json: %v", err)
+		slog.ErrorContext(ctx, "Error marshalling json: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, e := w.Write([]byte("Internal server error"))
 		if e != nil {
-			log.Errorf("Error writing response: %v", e)
+			slog.ErrorContext(ctx, "Error writing response: %v", e)
 		}
 		return
 	}
@@ -133,6 +136,6 @@ func (h *IdentityHandler) PostIdentity(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(json)
 	if err != nil {
-		log.Errorf("Error writing response: %v", err)
+		slog.ErrorContext(ctx, "Error writing response: %v", err)
 	}
 }
